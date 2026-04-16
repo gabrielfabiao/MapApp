@@ -46,11 +46,30 @@ body {
   padding: 2rem;
 }
 
+/* In workspace mode the app fills the screen */
+#app.workspace-mode {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
 /* Layout */
-.dashboard, .workspace {
+.dashboard {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+/* Workspace: full-screen canvas */
+.workspace {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #ffffff;
 }
 
 /* Header */
@@ -131,11 +150,54 @@ header {
 .card-title {
   font-weight: 600;
   margin-bottom: 0.5rem;
+  padding-right: 4rem; /* prevent title overlapping action buttons */
 }
 
 .card-meta {
   font-size: 0.75rem;
   color: var(--text-secondary);
+}
+
+/* Card action buttons (rename + delete) */
+.card-actions {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.card:hover .card-actions {
+  opacity: 1;
+}
+
+.card-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.card-action-btn:hover {
+  background: var(--amazon-primary);
+  color: #fff;
+  border-color: var(--amazon-primary);
+}
+
+.card-action-btn.delete-project-btn:hover {
+  background: #ef4444;
+  border-color: #ef4444;
 }
 
 /* Buttons */
@@ -171,17 +233,14 @@ header {
 }
 
 .image-area {
-  position: relative;
-  width: 100%;
-  background: #000;
-  border-radius: 1rem;
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
+  cursor: crosshair;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 400px;
-  cursor: crosshair;
 }
 
 .image-canvas {
@@ -211,10 +270,224 @@ header {
   cursor: move !important;
 }
 
-.main-image {
-  max-width: 100%;
+/* Floating toolbar at the top of the workspace */
+.workspace-toolbar {
+  position: absolute;
+  top: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(10, 18, 35, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 9999px;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2);
+  white-space: nowrap;
+}
+
+.workspace-toolbar .title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* Clickable toolbar title */
+.toolbar-title {
+  cursor: text;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s;
+  padding-bottom: 1px;
+}
+
+.toolbar-title:hover {
+  border-bottom-color: rgba(255,255,255,0.4);
+}
+
+/* Sidebar Tabs */
+.sidebar-tabs .btn {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  border-radius: 0.5rem;
+}
+
+.sidebar-tabs .btn.btn-primary {
+  background: var(--amazon-primary);
+  color: #ffffff;
+  border-color: var(--amazon-primary);
+}
+
+.sidebar-tabs .btn:hover:not(.btn-primary) {
+  background: #e2e8f0;
+}
+
+/* Form Groups (for Sun Panel) */
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-label {
   display: block;
-  user-drag: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.toolbar-title:hover {
+  border-bottom-color: rgba(255,255,255,0.4);
+}
+
+/* Inline rename input inside the toolbar */
+.toolbar-title-input {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 0.4rem;
+  padding: 0.1rem 0.5rem;
+  outline: none;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  min-width: 8ch;
+  max-width: 28ch;
+}
+
+.toolbar-title-input:focus {
+  border-color: var(--amazon-accent);
+  background: rgba(255,255,255,0.18);
+}
+
+.workspace-toolbar .hint {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.38);
+  font-weight: 500;
+}
+
+.workspace-toolbar .divider {
+  width: 1px;
+  height: 1.5rem;
+  background: rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
+
+.workspace-toolbar .btn {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 9999px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.workspace-toolbar .btn:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.workspace-toolbar .btn-primary {
+  background: var(--amazon-primary);
+  border-color: transparent;
+  padding: 0.55rem 1.25rem;
+}
+
+.workspace-toolbar .btn-primary:hover {
+  background: var(--amazon-dark);
+}
+
+.workspace-toolbar .search-input {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.55rem 1.1rem;
+  cursor: pointer;
+}
+
+.workspace-toolbar .search-input option {
+  background: #1e293b;
+  color: #fff;
+}
+
+/* Collapsible right panel */
+.sidebar-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 420px;
+  z-index: 200;
+  display: flex;
+  align-items: stretch;
+  pointer-events: none;
+}
+
+.sidebar-panel {
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid rgba(0,0,0,0.08);
+  box-shadow: -8px 0 40px rgba(0,0,0,0.12);
+  width: 100%;
+  overflow-y: auto;
+  padding: 1.5rem;
+  padding-top: 5.5rem;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+}
+
+.sidebar-drawer.open .sidebar-panel {
+  transform: translateX(0);
+}
+
+/* Markers toggle icon rotates when open */
+.sidebar-toggle-icon {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+}
+
+.sidebar-drawer.open ~ * .sidebar-toggle-icon,
+.toolbar-markers-btn.active .sidebar-toggle-icon {
+  transform: rotate(90deg);
+}
+
+/* Active/open state for the toolbar markers button */
+.workspace-toolbar .toolbar-markers-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.workspace-toolbar .toolbar-markers-btn.active {
+  background: var(--amazon-primary);
+  border-color: transparent;
+}
+
+.sidebar-panel-heading {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  padding-left: 0.25rem;
+}
+
+.main-image {
+  display: block;
   -webkit-user-drag: none;
 }
 
@@ -260,6 +533,17 @@ header {
   z-index: 110;
 }
 
+.marker.is-tree {
+  background-color: #22c55e;
+  border-color: #15803d;
+  font-size: 1.2rem; /* Larger for emoji */
+}
+
+.marker.is-tree:hover {
+  background-color: #16a34a;
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
 /* Marker Delete Button on Over */
 .marker .delete-btn {
   position: absolute;
@@ -285,33 +569,34 @@ header {
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .caption-item {
-  background: var(--card-bg);
+  background: #f8fafc;
   border: 1px solid var(--border-color);
   border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: 0.7rem 0.875rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   transition: all 0.2s;
   cursor: pointer;
   width: 100%;
   text-align: left;
+  color: var(--text-primary);
 }
 
 .caption-item:hover {
   border-color: var(--amazon-primary);
-  background: var(--glass-bg);
-  transform: translateX(4px);
+  background: rgba(0, 114, 62, 0.04);
+  transform: translateX(-3px);
 }
 
 .caption-item.active {
-  border-color: var(--amazon-accent);
-  background: var(--glass-bg);
-  box-shadow: 0 0 0 2px rgba(112, 224, 0, 0.1);
+  border-color: var(--amazon-primary);
+  background: rgba(0, 114, 62, 0.06);
+  box-shadow: 0 0 0 3px rgba(0, 114, 62, 0.1);
 }
 
 .caption-label-chip {
@@ -334,10 +619,11 @@ header {
 
 .caption-title {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text-primary);
 }
 
 .caption-preview {

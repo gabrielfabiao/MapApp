@@ -4,7 +4,15 @@ export const Storage = {
     loadProjects() {
         const data = localStorage.getItem(STORAGE_KEY);
         try {
-            return data ? JSON.parse(data) : [];
+            const parsed = data ? JSON.parse(data) : [];
+            return parsed.map(p => ({
+                ...p,
+                buildings: p.buildings || [],
+                trees: p.trees || [],
+                pixelsPerUnit: p.pixelsPerUnit || 10,
+                location: p.location || { lat: 51.5, lng: -0.1 },
+                northBearing: p.northBearing || 0
+            }));
         } catch (e) {
             console.error('Failed to parse projects from storage', e);
             return [];
