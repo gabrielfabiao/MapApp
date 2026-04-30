@@ -44,9 +44,8 @@ export function initDashboard(state, renderApp) {
             state.projects.push(newProject);
             Storage.saveProjects(state.projects);
             state.currentProject = newProject;
-            state.view = 'workspace';
             newModal.classList.remove('open');
-            renderApp();
+            window.location.href = 'workspace.html?id=' + newProject.id;
         }
     });
 
@@ -109,9 +108,7 @@ export function initDashboard(state, renderApp) {
         }
 
         // Open Project
-        state.currentProject = state.projects.find(p => p.id === id);
-        state.view = 'workspace';
-        renderApp();
+        window.location.href = 'workspace.html?id=' + id;
     });
 }
 

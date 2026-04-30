@@ -52,9 +52,7 @@ export function initWorkspace(state, renderApp) {
  
     // --- Toolbar: Back ---
     ws.querySelector('#back-btn').onclick = () => {
-        state.view = 'dashboard';
-        state.captionSearchQuery = '';
-        renderApp();
+        window.location.href = '/';
     };
  
     // --- Toolbar: Reset Zoom ---

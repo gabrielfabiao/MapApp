@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
+.preload * {
+  transition: none !important;
+}
+
 :root {
   --amazon-dark: #1b4d36;
   --amazon-primary: #2E7D5B;
@@ -1150,15 +1154,23 @@ header {
   cursor: wait;
 }
 
-#settings-btn {
-  font-size: 1.2rem;
-  padding: 0.5rem;
-  border-radius: 50%;
-  border: 1px solid transparent;
-  transition: all 0.3s ease;
+#settings-btn,
+#weather-toggle-btn,
+#sidebar-toggle-btn,
+#back-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0 !important;
+  border-radius: 50% !important;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
+}
+
+#settings-btn {
+  font-size: 1.2rem;
+  border: 1px solid transparent;
 }
 
 #settings-btn:hover {

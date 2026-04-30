@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/src/style.css">
+    <title>Garden Map Workspace</title>
+  </head>
+  <body class="preload">
+    <div id="app" class="workspace-mode">
+      <!-- Workspace View -->
+      <div id="workspace-view" class="view">
+        <div class="workspace">
+          <!-- Full-screen image area -->
+          <div class="image-area" id="image-container">
+            <div class="image-canvas" id="image-canvas">
+              <div id="image-wrap" class="interactive-image-layer">
+                <!-- Main Image will go here -->
+                
+                <!-- Shadow Environment SVG: Persistent and critical for real-time updates -->
+                <svg id="shadow-environment" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <rect width="100%" height="100%" fill="transparent" id="sun-wash-rect"></rect>
+                  <g id="shadow-polygons"></g>
+                  <g id="tree-shadow-polygons"></g>
+                </svg>
+
+                <div class="buildings-overlay" id="buildings-overlay">
+                  <div id="drawing-preview" style="display:none; position:absolute; border:2px dashed #0ea5e9; background:rgba(14, 165, 233, 0.2); z-index:50;"></div>
+                </div>
+                <div class="marker-overlay" id="marker-overlay"></div>
+              </div>
+            </div>
+
+            <!-- Sun Overlay Compass -->
+            <div id="sun-overlay-container" style="position: absolute; bottom: 20px; left: 20px; pointer-events: none; z-index: 101;">
+              <!-- Dynamic Sun SVG will be rendered here -->
+            </div>
+          </div>
+
+          <!-- Floating toolbar -->
+          <div class="workspace-toolbar">
+            <button class="btn" id="back-btn" title="Go Back">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m15 18-6-6 6-6"/>
+              </svg>
+            </button>
+            <span class="toolbar-divider"></span>
+            <button class="btn sidebar-toggle-trigger" id="weather-toggle-btn" title="Weather Forecast">
+              <span>☁️</span>
+            </button>
+            <span class="toolbar-divider"></span>
+            <h1 class="title toolbar-title" id="project-title" title="Click to rename">Project Title</h1>
+            <span class="toolbar-divider"></span>
+            <span class="hint">Scroll: Zoom &bull; Shift+Drag: Pan</span>
+            <button class="btn" id="reset-zoom-btn" title="Reset Zoom">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+              </svg>
+              Reset
+            </button>
+            <select id="marker-type-select" class="toolbar-select">
+              <option value="number">Numbers</option>
+              <option value="letter">Letters</option>
+            </select>
+            <button class="btn btn-primary" id="upload-btn">Upload Image</button>
+            <input type="file" id="file-input" hidden accept="image/*">
+            
+            <span class="toolbar-divider"></span>
+            
+            <button class="btn btn-sm" id="mode-buildings-btn">Buildings</button>
+
+            <span class="toolbar-divider"></span>
+            
+            <button class="btn btn-sm" id="toggle-shadows-btn" title="Toggle Shadows">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              Shadows
+            </button>
+
+            <span class="toolbar-divider"></span>
+            
+            <button class="btn sidebar-toggle-trigger" id="sidebar-toggle-btn" title="Toggle Sidebar">
+              <span class="sidebar-toggle-icon">&#9776;</span>
+            </button>
+            
+            <span class="toolbar-divider"></span>
+            
+            <button class="btn btn-sm" id="settings-btn" title="Project Settings">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.72V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Weather Left Drawer -->
+          <div class="sidebar-drawer left" id="weather-drawer">
+            <div class="sidebar-panel">
+              <div class="sidebar-panel-heading">Weekly Forecast</div>
+              <div class="sidebar-scroll-area">
+                <div id="weather-content">
+                  <div style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                    Set a location in the Sun Env panel to see the forecast.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Collapsible right-side drawer -->
+          <div class="sidebar-drawer" id="sidebar-drawer">
+            <div class="sidebar-panel">
+              <!-- Tabs -->
+              <div class="sidebar-tabs">
+                <button class="btn" id="tab-markers" style="flex:1;">Markers</button>
+                <button class="btn" id="tab-plants" style="flex:1;">Plants</button>
+                <button class="btn" id="tab-sun" style="flex:1;">Sun Env</button>
+              </div>
+
+              <div class="sidebar-scroll-area">
+                <!-- Marker List Content -->
+                <div id="marker-list-section">
+                  <div class="sidebar-panel-heading" id="marker-count-label">Markers (0)</div>
+                  <div class="sidebar" id="marker-legend-list"></div>
+                </div>
+
+                <!-- Plants List Content -->
+                <div id="plants-list-section" class="hidden">
+                  <div class="sidebar-panel-heading" id="plant-count-label">Plants (0)</div>
+                  <div style="padding: 0 1rem 1rem 1rem;">
+                    <input type="text" id="plant-search-input" class="search-input" placeholder="Search by species..." style="width: 100%;">
+                  </div>
+                  <div class="sidebar" id="plant-legend-list"></div>
+                </div>
+                
+                <!-- Sun Panel Content -->
+                <div id="sun-panel-section" class="hidden">
+                  <div class="sun-panel">
+                    <div class="form-group">
+                      <label class="form-label">Location (Lat / Lng)</label>
+                      <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <input type="number" id="sun-lat" class="search-input" style="padding-left:0.75rem;" step="any">
+                        <input type="number" id="sun-lng" class="search-input" style="padding-left:0.75rem;" step="any">
+                      </div>
+                      <button class="btn" id="sun-use-location-btn" style="width: 100%; justify-content: center; font-size: 0.75rem; padding: 0.4rem;">
+                        📍 Use My Location
+                      </button>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">North Bearing (&deg;)</label>
+                      <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <input type="range" id="sun-bearing-slider" min="0" max="360" value="0" style="flex:1;">
+                        <input type="number" id="sun-bearing-input" class="search-input" style="width:70px; padding-left:0.5rem;" value="0" min="0" max="360">
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Shadow Scale Factor</label>
+                      <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <input type="range" id="sun-scale-slider" min="1" max="100" value="10" style="flex:1;">
+                        <input type="number" id="sun-scale-input" class="search-input" style="width:70px; padding-left:0.5rem;" value="10" min="1" max="100">
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Time of Day</label>
+                      <input type="time" id="sun-time-input" class="search-input" style="width:100%; padding-left:0.75rem;">
+                      <input type="range" id="sun-time-slider" min="0" max="1439" value="720" style="width:100%; margin-top: 0.5rem;">
+                    </div>
+
+                    <div class="sun-stats">
+                      <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem;">
+                        <span style="font-size:0.8rem; color:var(--text-secondary);">Altitude</span>
+                        <strong id="sun-stat-alt">--&deg;</strong>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem;">
+                        <span style="font-size:0.8rem; color:var(--text-secondary);">Azimuth</span>
+                        <strong id="sun-stat-azi">--&deg;</strong>
+                      </div>
+                      <div style="display:flex; justify-content:space-between;">
+                        <span style="font-size:0.8rem; color:var(--text-secondary);">Intensity</span>
+                        <strong id="sun-stat-int">--%</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Marker Editor Modal -->
+        <div class="modal-overlay" id="marker-editor-modal">
+          <div class="modal">
+            <span class="modal-close" id="close-editor">&times;</span>
+            <h2 id="editor-title" style="margin-bottom:1.5rem; color:var(--amazon-dark);">Edit Marker</h2>
+
+            <div class="form-group">
+              <label class="form-label">Title / Name</label>
+              <input type="text" id="edit-title" class="search-input" style="padding-left:1rem;" placeholder="e.g. Main Entrance">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Technical Identifier (Number/Letter)</label>
+              <input type="text" id="edit-label" class="search-input" style="padding-left:1rem;">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Plant ID (Scientific Name)</label>
+              <div id="sci-name-container" style="min-height: 2.5rem; border: 1px solid var(--amazon-border); border-radius: 0.25rem; padding: 0.5rem; display: flex; align-items: center; gap: 0.5rem; background: #fff;">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Detailed Description</label>
+              <textarea id="edit-description" class="form-textarea" placeholder="Describe this point in detail..."></textarea>
+            </div>
+
+            <div class="tree-settings-panel">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <input type="checkbox" id="edit-is-tree" style="width: 1.2rem; height: 1.2rem; cursor: pointer;">
+                <label for="edit-is-tree" class="form-label" style="margin-bottom: 0; cursor: pointer; color: #15803d; font-weight: bold;">Designate as a Tree 🌳</label>
+              </div>
+              
+              <div id="tree-settings-fields" style="display: none; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Height (m)</label>
+                  <input type="number" id="edit-tree-height" class="search-input" style="padding-left: 1rem;" placeholder="e.g. 15">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Canopy Diam (m)</label>
+                  <input type="number" id="edit-tree-canopy" class="search-input" style="padding-left: 1rem;" placeholder="e.g. 8">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+                <label class="form-label" style="margin-bottom:0;">Photo Gallery (<span id="img-count">0</span>)</label>
+                <button class="btn btn-sm btn-outline" id="identify-plant-btn" style="display:none; font-size: 0.7rem; padding: 0.3rem 0.6rem;">✨ Identify Plant</button>
+              </div>
+              <div class="gallery-grid" id="gallery-grid"></div>
+              <input type="file" id="marker-img-input" hidden accept="image/*" multiple>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
+              <button class="btn btn-danger" id="delete-marker-final">Delete Marker</button>
+              <button class="btn btn-primary" id="save-marker-details">Save Changes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Global Settings Modal -->
+        <div class="modal-overlay" id="settings-modal">
+          <div class="modal">
+            <button class="modal-close" id="close-settings" title="Close Settings">&times;</button>
+            <h2 style="margin-bottom:1.5rem; color:var(--amazon-dark);">Settings</h2>
+            
+            <div class="form-group">
+              <label class="form-label">Pl@ntNet API Key</label>
+              <input type="password" id="settings-api-key" class="search-input" style="padding-left:1rem;" placeholder="Paste your API key here...">
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
+              <button class="btn btn-primary" id="save-settings-btn">Save Settings</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Global Help Button -->
+      <button id="global-help-btn" class="global-help-btn" title="How it works">?</button>
+
+      <!-- Help Slideshow Modal -->
+      <div class="modal-overlay" id="help-modal">
+        <div class="modal help-modal-content">
+          <span class="modal-close" id="close-help-modal">&times;</span>
+          
+          <div class="slideshow-container" id="help-slideshow-container">
+            <!-- Slide 1 -->
+            <div class="help-slide active">
+              <h2 class="help-slide-header">🌱 Welcome to Your Garden Map</h2>
+              <h3 class="help-slide-title">Get Started</h3>
+              <ul class="help-slide-list">
+                <li>Upload a photo of your garden to begin. This will be your base map.</li>
+              </ul>
+            </div>
+            <!-- ... more slides would go here ... -->
+          </div>
+
+          <div class="help-slideshow-controls">
+            <button class="btn btn-outline" id="help-prev-btn">&lt;</button>
+            <div class="help-slideshow-dots" id="help-dots-container"></div>
+            <button class="btn btn-primary" id="help-next-btn">&gt;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirmation Modal -->
+      <div class="modal-overlay" id="confirm-modal" style="z-index: 5000;">
+        <div class="modal" style="max-width: 400px; text-align: center;">
+          <h3 id="confirm-title" style="margin-bottom: 1rem; color: var(--amazon-dark);">Confirm Action</h3>
+          <p id="confirm-message" style="color: var(--text-secondary); margin-bottom: 2rem;">Are you sure you want to proceed?</p>
+          <div style="display:flex; justify-content:center; gap:1rem;">
+            <button class="btn btn-outline" id="confirm-cancel-btn">Cancel</button>
+            <button class="btn btn-danger" id="confirm-ok-btn">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/workspace_main.js"></script>
+    <script>
+      window.addEventListener('load', () => {
+        document.body.classList.remove('preload');
+      });
+    </script>
+  </body>
+</html>
