@@ -4,93 +4,11 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/src/style.css">
-    <title>Amazon Green Garden Dashboard</title>
+    <title>Amazon Green Garden</title>
   </head>
   <body class="preload">
-    <div id="app">
-      <!-- Dashboard View -->
-      <div id="dashboard-view" class="view">
-        <header>
-          <h1 class="title">My Projects</h1>
-          <div class="search-container">
-            <input type="text" id="dashboard-search" class="search-input" placeholder="Search projects...">
-          </div>
-          <button class="btn btn-primary" id="new-project-btn">
-            <span>+</span> New Project
-          </button>
-        </header>
-
-        <div class="grid" id="project-grid">
-          <!-- Dynamic Project Cards will be inserted here -->
-        </div>
-
-        <!-- New Project Modal -->
-        <div class="modal-overlay" id="new-project-modal">
-          <div class="modal">
-            <h2 style="margin-bottom: 1rem;">New Project</h2>
-            <input type="text" id="project-name-input" class="search-input" placeholder="Project Name" style="margin-bottom: 1rem; padding-left: 1rem;">
-            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-              <button class="btn" id="cancel-project-btn">Cancel</button>
-              <button class="btn btn-primary" id="create-project-btn">Create</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Rename Project Modal -->
-        <div class="modal-overlay" id="rename-project-modal">
-          <div class="modal">
-            <h2 style="margin-bottom: 1rem;">Rename Project</h2>
-            <input type="text" id="rename-project-input" class="search-input" placeholder="Project Name" style="margin-bottom: 1rem; padding-left: 1rem;">
-            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-              <button class="btn" id="cancel-rename-btn">Cancel</button>
-              <button class="btn btn-primary" id="confirm-rename-btn">Save</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Global Help Button -->
-      <button id="global-help-btn" class="global-help-btn" title="How it works">?</button>
-
-      <!-- Help Slideshow Modal -->
-      <div class="modal-overlay" id="help-modal">
-        <div class="modal help-modal-content">
-          <span class="modal-close" id="close-help-modal">&times;</span>
-          
-          <div class="slideshow-container" id="help-slideshow-container">
-            <!-- Slide 1 -->
-            <div class="help-slide active">
-              <h2 class="help-slide-header">🌱 Welcome to Your Garden Map</h2>
-              <h3 class="help-slide-title">Get Started</h3>
-              <ul class="help-slide-list">
-                <li>Create a project and upload a photo of your garden to begin.</li>
-              </ul>
-            </div>
-            <!-- ... more slides could be here ... -->
-          </div>
-
-          <div class="help-slideshow-controls">
-            <button class="btn btn-outline" id="help-prev-btn">&lt;</button>
-            <div class="help-slideshow-dots" id="help-dots-container"></div>
-            <button class="btn btn-primary" id="help-next-btn">&gt;</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Confirmation Modal (Global) -->
-      <div class="modal-overlay" id="confirm-modal" style="z-index: 5000;">
-        <div class="modal" style="max-width: 400px; text-align: center;">
-          <h3 id="confirm-title" style="margin-bottom: 1rem; color: var(--amazon-dark);">Confirm Action</h3>
-          <p id="confirm-message" style="color: var(--text-secondary); margin-bottom: 2rem;">Are you sure you want to proceed?</p>
-          <div style="display:flex; justify-content:center; gap:1rem;">
-            <button class="btn btn-outline" id="confirm-cancel-btn">Cancel</button>
-            <button class="btn btn-danger" id="confirm-ok-btn">Delete</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <script type="module" src="/src/dashboard_main.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
     <script>
       window.addEventListener('load', () => {
         document.body.classList.remove('preload');
