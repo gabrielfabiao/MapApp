@@ -7,8 +7,10 @@ export const state = {
     currentProject: null,
     searchQuery: '',
     captionSearchQuery: '',
+    plantSearchQuery: '',
     selectedMarkerIdx: null,
-    activeTab: 'markers', // 'markers' or 'sun'
+    selectedSpeciesId: null,
+    activeTab: 'markers', // 'markers' | 'plants' | 'sun'
     mode: 'markers', // 'markers' | 'buildings'
     isDrawerOpen: false,
     sunDate: new Date(),
@@ -21,7 +23,12 @@ export const state = {
         x: 0,
         y: 0
     },
-    drawingState: null // { startX, startY, currentX, currentY }
+    drawingState: null, // { startX, startY, currentX, currentY }
+    showShadows: true, // toggles sun environment visuals
+    isWeatherOpen: false,
+    weatherData: null,
+    selectedWeatherDay: 0,
+    settings: Storage.loadSettings()
 };
 
 // --- Utilities ---

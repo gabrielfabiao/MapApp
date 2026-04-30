@@ -43,5 +43,18 @@ export const Storage = {
         let projects = this.loadProjects();
         projects = projects.filter(p => p.id !== id);
         this.saveProjects(projects);
+    },
+
+    loadSettings() {
+        const data = localStorage.getItem('image_captioner_settings');
+        try {
+            return data ? JSON.parse(data) : { plantApiKey: '' };
+        } catch (e) {
+            return { plantApiKey: '' };
+        }
+    },
+
+    saveSettings(settings) {
+        localStorage.setItem('image_captioner_settings', JSON.stringify(settings));
     }
 };

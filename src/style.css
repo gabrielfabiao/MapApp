@@ -1,35 +1,39 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
 :root {
-  --amazon-dark: #004b23;
-  --amazon-primary: #00723e;
-  --amazon-light: #38b000;
-  --amazon-accent: #70e000;
-  --bg-color: #f8fafc;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --card-bg: rgba(255, 255, 255, 0.8);
-  --glass-bg: rgba(255, 255, 255, 0.6);
-  --border-color: #e2e8f0;
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --amazon-dark: #1b4d36;
+  --amazon-primary: #2E7D5B;
+  --amazon-light: #A7C957;
+  --amazon-accent: #A7C957;
+  --bg-color: #DAD7CD;
+  --text-primary: #1b2e26;
+  --text-secondary: #6B705C;
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --border-color: rgba(107, 112, 92, 0.3);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --header-height: 70px;
 }
 
 [data-theme='dark'] {
-  --bg-color: #0f172a;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --card-bg: rgba(30, 41, 59, 0.8);
-  --glass-bg: rgba(30, 41, 59, 0.6);
-  --border-color: #334155;
+  --bg-color: #1b2e26;
+  --text-primary: #DAD7CD;
+  --text-secondary: #A7C957;
+  --card-bg: rgba(46, 125, 91, 0.2);
+  --glass-bg: rgba(46, 125, 91, 0.15);
+  --border-color: rgba(167, 201, 87, 0.3);
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
 }
 
 body {
@@ -44,6 +48,15 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  min-height: 100vh;
+}
+
+.view {
+  width: 100%;
+}
+
+.hidden {
+  display: none !important;
 }
 
 /* In workspace mode the app fills the screen */
@@ -69,7 +82,7 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--bg-color);
 }
 
 /* Header */
@@ -235,7 +248,7 @@ header {
 .image-area {
   position: absolute;
   inset: 0;
-  background: #ffffff;
+  background: var(--bg-color);
   overflow: hidden;
   cursor: crosshair;
   display: flex;
@@ -247,13 +260,35 @@ header {
   position: absolute;
   top: 0;
   left: 0;
+  transform-origin: 0 0;
+}
+
+/* Container that exactly matches image dimensions */
+.interactive-image-layer {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+.image-canvas.panning {
+  cursor: grabbing !important;
+}
+
+.main-image {
+  max-width: none;
+  max-height: none;
+  display: block;
+}
+
+#shadow-environment {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  transform-origin: 0 0;
-  will-change: transform;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .marker-overlay {
@@ -263,7 +298,17 @@ header {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 100;
+  z-index: 40; /* Above buildings */
+}
+
+.buildings-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 30;
+  pointer-events: none; /* Default to none, enabled in JS for building mode */
 }
 
 .image-canvas.panning {
@@ -288,6 +333,20 @@ header {
   padding: 0.75rem 1.5rem;
   box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2);
   white-space: nowrap;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 1.2rem;
+  background: rgba(255, 255, 255, 0.15);
+  display: inline-block;
+  margin: 0 0.5rem;
+}
+
+.workspace-toolbar .btn.active {
+  background: var(--amazon-primary);
+  border-color: var(--amazon-primary);
+  color: #fff;
 }
 
 .workspace-toolbar .title {
@@ -316,6 +375,7 @@ header {
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   font-size: 0.8rem;
+  font-weight: 600;
   border-radius: 0.5rem;
 }
 
@@ -344,6 +404,35 @@ header {
 
 .toolbar-title:hover {
   border-bottom-color: rgba(255,255,255,0.4);
+}
+
+.toolbar-select {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  padding: 0.45rem 1rem;
+  padding-right: 2.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.toolbar-select:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.toolbar-select option {
+  background: #10121a;
+  color: #fff;
 }
 
 /* Inline rename input inside the toolbar */
@@ -459,23 +548,6 @@ header {
   display: inline-block;
 }
 
-.sidebar-drawer.open ~ * .sidebar-toggle-icon,
-.toolbar-markers-btn.active .sidebar-toggle-icon {
-  transform: rotate(90deg);
-}
-
-/* Active/open state for the toolbar markers button */
-.workspace-toolbar .toolbar-markers-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.workspace-toolbar .toolbar-markers-btn.active {
-  background: var(--amazon-primary);
-  border-color: transparent;
-}
-
 .sidebar-panel-heading {
   font-size: 0.7rem;
   font-weight: 800;
@@ -494,8 +566,8 @@ header {
 .marker {
   position: absolute;
   pointer-events: auto;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   background-color: var(--amazon-primary);
   color: white;
   border-radius: 50%;
@@ -503,7 +575,7 @@ header {
   justify-content: center;
   align-items: center;
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   transform: translate(-50%, -50%);
   cursor: grab;
   border: 2px solid white;
@@ -522,26 +594,27 @@ header {
   opacity: 0.9;
 }
 
-.marker:hover {
-  transform: translate(-50%, -50%) scale(1.1);
+.marker:hover, .marker.highlighted {
+  transform: translate(-50%, -50%) scale(1.4);
   background-color: var(--amazon-dark);
-}
-
-.marker.selected {
-  background-color: var(--amazon-accent);
-  border-color: var(--amazon-dark);
-  z-index: 110;
+  z-index: 150;
 }
 
 .marker.is-tree {
-  background-color: #22c55e;
-  border-color: #15803d;
-  font-size: 1.2rem; /* Larger for emoji */
+  background-color: #1e4d2b; /* Deep Forest Green */
+  border-color: #0d2e16;
 }
 
 .marker.is-tree:hover {
   background-color: #16a34a;
   transform: translate(-50%, -50%) scale(1.2);
+}
+
+.marker.selected, .marker.is-tree.selected {
+  background-color: var(--amazon-accent);
+  border-color: var(--amazon-dark);
+  z-index: 110;
+  box-shadow: 0 0 15px rgba(112, 224, 0, 0.6);
 }
 
 /* Marker Delete Button on Over */
@@ -573,6 +646,19 @@ header {
 }
 
 .caption-item {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: block;
+  transition: padding 0.25s cubic-bezier(0.2, 0, 0, 1);
+  cursor: pointer;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.caption-item-card {
   background: #f8fafc;
   border: 1px solid var(--border-color);
   border-radius: 0.75rem;
@@ -580,24 +666,23 @@ header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  transition: all 0.2s;
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-  color: var(--text-primary);
+  transition: all 0.2s ease;
+  pointer-events: none;
 }
 
-.caption-item:hover {
+.caption-item:hover .caption-item-card {
   border-color: var(--amazon-primary);
   background: rgba(0, 114, 62, 0.04);
   transform: translateX(-3px);
 }
 
-.caption-item.active {
+.caption-item.active .caption-item-card {
   border-color: var(--amazon-primary);
   background: rgba(0, 114, 62, 0.06);
   box-shadow: 0 0 0 3px rgba(0, 114, 62, 0.1);
 }
+
+
 
 .caption-label-chip {
   background: var(--amazon-primary);
@@ -654,6 +739,57 @@ header {
   opacity: 1;
 }
 
+.caption-item.dragging {
+  opacity: 0.3;
+}
+
+.caption-item.dragging .caption-item-card {
+  outline: 2px solid var(--amazon-accent);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* Suppress marker hover outlines on the map during drag */
+#workspace-view.dragging-active .marker:hover {
+  outline: none !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.caption-item.drag-over-top {
+  padding-top: 62px;
+}
+
+.caption-item.drag-over-bottom {
+  padding-bottom: 62px;
+}
+
+/* The Insertion Line indicator, centered in the created gap */
+.caption-item.drag-over-top::before,
+.caption-item.drag-over-bottom::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--amazon-accent);
+  box-shadow: 0 0 10px var(--amazon-accent);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.caption-item.drag-over-top::before {
+  top: 30px;
+}
+
+.caption-item.drag-over-bottom::after {
+  bottom: 30px;
+}
+
+
+
+
+
+
+
 .delete-legend-btn:hover {
   background-color: rgba(239, 68, 68, 0.1);
   color: #ef4444;
@@ -703,12 +839,26 @@ header {
 
 .modal-close {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  font-size: 1.5rem;
+  top: 1rem;
+  right: 1rem;
+  font-size: 2rem;
   cursor: pointer;
   color: var(--text-secondary);
   line-height: 1;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 50%;
+}
+
+.modal-close:hover {
+  background: rgba(0,0,0,0.05);
+  color: var(--amazon-dark);
+  transform: rotate(90deg);
 }
 
 /* Marker Editor Specifics */
@@ -804,4 +954,401 @@ header {
   outline: none;
   border-color: var(--amazon-primary);
   box-shadow: 0 0 0 3px rgba(0, 114, 62, 0.1);
+}
+
+/* Tree settings in editor */
+.tree-settings-panel {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 0.5rem;
+  border: 1px dashed rgba(34, 197, 94, 0.3);
+  transition: all 0.3s ease;
+}
+
+.building-block {
+  position: absolute;
+  border: 2px solid #0ea5e9;
+  background-color: rgba(14, 165, 233, 0.4);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  pointer-events: auto;
+  transform-origin: center center;
+  user-select: none;
+}
+
+.building-block .delete-building-btn {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  font-size: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.building-block .delete-building-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.building-block .resize-handle {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 12px;
+  height: 12px;
+  background: #0ea5e9;
+  border: 2px solid white;
+  border-radius: 50%;
+  cursor: se-resize;
+  z-index: 10;
+}
+
+.building-block .rotate-handle {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  background: #8b5cf6;
+  border: 2px solid white;
+  border-radius: 50%;
+  cursor: grab;
+  z-index: 10;
+}
+.building-block .rotate-handle::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 5px;
+  width: 2px;
+  height: 10px;
+  background: #8b5cf6;
+}
+
+/* Sun Compass & Animations */
+.sun-compass {
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+.fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Left Sidebar Support */
+.sidebar-drawer.left {
+  left: 0;
+  right: auto;
+}
+.sidebar-drawer.left .sidebar-panel {
+  transform: translateX(-100%);
+  border-left: none;
+  border-right: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 8px 0 40px rgba(0,0,0,0.12);
+}
+.sidebar-drawer.left.open .sidebar-panel {
+  transform: translateX(0);
+}
+
+/* Weather UI */
+.weather-day-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.weather-day-item:hover {
+  transform: scale(1.02);
+  border-color: var(--amazon-primary);
+}
+
+.weather-day-item.active {
+  background: rgba(0, 114, 62, 0.08);
+  border-color: var(--amazon-primary);
+  box-shadow: 0 4px 12px rgba(0, 114, 62, 0.1);
+}
+
+.weather-icon {
+  font-size: 2rem;
+}
+
+.weather-info {
+  flex: 1;
+}
+
+.weather-date {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.1rem;
+}
+
+.weather-temp {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.weather-details {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(0,0,0,0.03);
+  border-radius: 0.75rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+/* AI Plant Identification & Settings */
+#identify-plant-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+#identify-plant-btn:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+#identify-plant-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+#settings-btn {
+  font-size: 1.2rem;
+  padding: 0.5rem;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#settings-btn:hover {
+  transform: rotate(45deg);
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.modal-overlay#settings-modal .modal {
+  max-width: 400px;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-outline:hover {
+  background: rgba(0,0,0,0.02);
+  border-color: var(--amazon-primary);
+}
+
+/* --- Help Button & Slideshow Modal --- */
+.global-help-btn {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 1000;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--amazon-primary);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  font-size: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.global-help-btn:hover {
+  transform: scale(1.1) rotate(10deg);
+  background: var(--amazon-dark);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Help Modal specific width/styling */
+.modal.help-modal-content {
+  max-width: 500px;
+  width: 90%;
+  padding: 3rem 2rem 2rem 2rem;
+  text-align: left;
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+#close-help-modal {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  font-size: 1.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s;
+  z-index: 10;
+  line-height: 1;
+}
+
+#close-help-modal:hover {
+  color: #ef4444;
+}
+
+.slideshow-container {
+  position: relative;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.help-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  visibility: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.help-slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+  visibility: visible;
+  position: relative;
+}
+
+.help-slide-header {
+  font-size: 1rem;
+  color: var(--amazon-primary);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.help-slide-title {
+  font-size: 1.4rem;
+  color: var(--amazon-dark);
+  margin-bottom: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.help-slide-text {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+}
+
+.help-slide-text strong {
+  color: var(--amazon-primary);
+}
+
+.help-slide-list {
+  text-align: left;
+  margin: 0 0 1rem 1.5rem;
+  padding-left: 0;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.help-slideshow-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.help-slideshow-dots {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  flex: 1;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+[data-theme='dark'] .dot {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dot:hover {
+  background: rgba(0, 114, 62, 0.5);
+  transform: scale(1.2);
+}
+
+.dot.active {
+  background: var(--amazon-primary);
+  transform: scale(1.3);
+}
+
+.help-slideshow-controls .btn {
+  min-width: 40px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
 }

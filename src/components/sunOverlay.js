@@ -29,26 +29,26 @@ export function renderSunOverlay() {
     `;
 }
 
-export function updateSunOverlayStyles(altDeg, aziDeg, intensity, bearing, project) {
+export function updateSunOverlayStyles(altDeg, aziDeg, intensity, bearing, project, state) {
     const compassRose = document.getElementById('compass-rose');
     const sunArrow = document.getElementById('sun-arrow');
     const sunBeam = document.getElementById('sun-beam');
     const sunDot = document.getElementById('sun-dot');
 
-    if (!compassRose || !sunArrow) return;
+    if (compassRose && sunArrow) {
+        // The compass N usually points UP.
+        // If the image top is bearing (e.g. 90=East), N should be drawn at -bearing (-90).
+        compassRose.style.transform = `rotate(${-bearing}deg)`;
 
-    // The compass N usually points UP.
-    // If the image top is bearing (e.g. 90=East), N should be drawn at -bearing (-90).
-    compassRose.style.transform = `rotate(${-bearing}deg)`;
-
-    // The sun comes FROM azimuth. We want the sun-dot to sit at that angle.
-    // Our SVG has the sun-dot drawn at Top (-Y direction), which is 0 degrees rotation.
-    // So if Azimuth is 90 (East), rotating by 90 puts the sun on the right (East relative to screen).
-    // Now we must offset by the bearing so it maps to the image correctly.
-    // If bearing is 90 (Image top is East), and sun is at 90 (East), the sun is at the Top.
-    // So angle = aziDeg - bearing
-    const rotation = aziDeg - bearing;
-    sunArrow.style.transform = `rotate(${rotation}deg)`;
+        // The sun comes FROM azimuth. We want the sun-dot to sit at that angle.
+        // Our SVG has the sun-dot drawn at Top (-Y direction), which is 0 degrees rotation.
+        // So if Azimuth is 90 (East), rotating by 90 puts the sun on the right (East relative to screen).
+        // Now we must offset by the bearing so it maps to the image correctly.
+        // If bearing is 90 (Image top is East), and sun is at 90 (East), the sun is at the Top.
+        // So angle = aziDeg - bearing
+        const rotation = aziDeg - bearing;
+        sunArrow.style.transform = `rotate(${rotation}deg)`;
+    }
 
     // Change color based on altitude (sunset vs noon)
     let color = '#fbbf24'; // yellow
@@ -77,9 +77,20 @@ export function updateSunOverlayStyles(altDeg, aziDeg, intensity, bearing, proje
     // --- Building Shadows & Sunlight ---
     const shadowPolygonsG = document.getElementById('shadow-polygons');
     const sunWashRect = document.getElementById('sun-wash-rect');
+    const treeShadowPolygonsG = document.getElementById('tree-shadow-polygons');
     
-    if (shadowPolygonsG && project && project.buildings) {
-        shadowPolygonsG.innerHTML = ''; // clear old shadows
+    if (state && state.showShadows === false) {
+        if (shadowPolygonsG) shadowPolygonsG.innerHTML = '';
+        if (treeShadowPolygonsG) treeShadowPolygonsG.innerHTML = '';
+        if (sunWashRect) sunWashRect.setAttribute('fill', 'transparent');
+        return;
+    }
+
+    // Always clear old shadows at the start of calculation
+    if (shadowPolygonsG) shadowPolygonsG.innerHTML = '';
+    if (treeShadowPolygonsG) treeShadowPolygonsG.innerHTML = '';
+
+    if (project && project.buildings) {
         shadowPolygonsG.setAttribute('opacity', '0.6'); // Apply opacity to the group so overlapping shadows don't stack
         
         // If sun is below horizon, no sunny wash, just dark.
@@ -115,15 +126,22 @@ export function updateSunOverlayStyles(altDeg, aziDeg, intensity, bearing, proje
         const imgAspect = (imgEl && imgEl.naturalWidth) ? (imgEl.naturalHeight / imgEl.naturalWidth) : 1;
 
         project.buildings.forEach(b => {
-             const hPercent = (b.zHeight * ppu) / imgWidthPx * 100;
+             const zH = parseFloat(b.zHeight);
+             const validZH = isNaN(zH) ? 10 : zH;
+             const hPercent = (validZH * ppu) / imgWidthPx * 100;
              const shadowLenPercent = hPercent * shadowScale;
 
              const dx = shadowLenPercent * Math.sin(shadowAngleRad);
              const dy = (-shadowLenPercent * Math.cos(shadowAngleRad)) / imgAspect; // Correct for non-square pixel aspect mapping
 
-             const cx = b.x + b.width / 2;
-             const cy = b.y + b.height / 2;
-             const angRad = (b.angle || 0) * Math.PI / 180;
+             const bw = parseFloat(b.width) || 1;
+             const bh = parseFloat(b.height) || 1;
+             const bx = parseFloat(b.x) || 0;
+             const by = parseFloat(b.y) || 0;
+
+             const cx = bx + bw / 2;
+             const cy = by + bh / 2;
+             const angRad = (parseFloat(b.angle) || 0) * Math.PI / 180;
              const cosA = Math.cos(angRad);
              const sinA = Math.sin(angRad);
 
@@ -137,10 +155,10 @@ export function updateSunOverlayStyles(altDeg, aziDeg, intensity, bearing, proje
              };
 
              // The base rectangle corners in %
-             const [x1, y1] = rotatePt(b.x, b.y);
-             const [x2, y2] = rotatePt(b.x + b.width, b.y);
-             const [x3, y3] = rotatePt(b.x + b.width, b.y + b.height);
-             const [x4, y4] = rotatePt(b.x, b.y + b.height);
+             const [x1, y1] = rotatePt(bx, by);
+             const [x2, y2] = rotatePt(bx + bw, by);
+             const [x3, y3] = rotatePt(bx + bw, by + bh);
+             const [x4, y4] = rotatePt(bx, by + bh);
 
              // Projected roof corners
              const px1 = x1 + dx, py1 = y1 + dy;
@@ -174,23 +192,19 @@ export function updateSunOverlayStyles(altDeg, aziDeg, intensity, bearing, proje
              ];
              const hull = getConvexHull(points);
 
-             let pathD = `M ${hull[0][0]} ${hull[0][1]} `;
-             for(let i=1; i<hull.length; i++) pathD += `L ${hull[i][0]} ${hull[i][1]} `;
-             pathD += 'Z';
+             const ptsStr = hull.map(p => `${p[0]},${p[1]}`).join(' ');
 
-             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-             path.setAttribute('d', pathD);
-             path.setAttribute('fill', 'rgb(30,30,40)'); // Solid grey (opacity handled by group)
-             path.setAttribute('stroke', 'none'); // No ugly internal borders
+             const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+             polygon.setAttribute('points', ptsStr);
+             polygon.setAttribute('fill', 'rgb(30,30,40)'); // Solid grey (opacity handled by group)
+             polygon.setAttribute('stroke', 'none'); // No ugly internal borders
 
-             shadowPolygonsG.appendChild(path);
+             shadowPolygonsG.appendChild(polygon);
         });
     }
 
     // --- Tree Shadows (from Markers) ---
-    const treeShadowPolygonsG = document.getElementById('tree-shadow-polygons');
     if (treeShadowPolygonsG && project && project.markers) {
-        treeShadowPolygonsG.innerHTML = '';
         treeShadowPolygonsG.setAttribute('opacity', '0.5');
 
         if (altDeg < 0) return;
