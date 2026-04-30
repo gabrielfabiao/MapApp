@@ -810,12 +810,14 @@ header {
   z-index: 1000;
   visibility: hidden;
   opacity: 0;
+  pointer-events: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .modal-overlay.open {
   visibility: visible;
   opacity: 1;
+  pointer-events: auto;
 }
 
 .modal {
@@ -1265,7 +1267,7 @@ header {
   align-items: flex-start;
 }
 
-.help-slide.active {
+.modal-overlay.open .help-slide.active {
   opacity: 1;
   transform: translateX(0);
   pointer-events: auto;
