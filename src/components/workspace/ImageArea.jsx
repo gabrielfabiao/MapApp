@@ -86,6 +86,94 @@ export default function ImageArea({ onMarkerClick, onMarkerDelete }) {
     };
   }, [state.zoom, dispatch]);
 
+  // --- Touch: pinch-to-zoom + single-finger pan ---
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const PAN_THRESHOLD = 8;
+
+    const getDistance = (touches) => Math.hypot(
+      touches[0].clientX - touches[1].clientX,
+      touches[0].clientY - touches[1].clientY
+    );
+
+    let mode = 'none'; // 'none' | 'pan' | 'pinch'
+    let currentZoom = state.zoom;
+    let touchStartX = 0, touchStartY = 0;
+    let panOriginX = 0, panOriginY = 0;
+    let moved = false;
+    let pinchStartDist = 0;
+    let pinchStartScale = 1;
+    let pinchMidX = 0, pinchMidY = 0;
+
+    const onTouchStart = (e) => {
+      if (e.target.closest('.marker') || e.target.closest('.delete-btn')) return;
+
+      if (e.touches.length === 2) {
+        mode = 'pinch';
+        moved = true;
+        currentZoom = state.zoom;
+        pinchStartDist = getDistance(e.touches);
+        pinchStartScale = currentZoom.scale;
+        const rect = container.getBoundingClientRect();
+        pinchMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+        pinchMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+        e.preventDefault();
+      } else if (e.touches.length === 1) {
+        mode = 'pan';
+        moved = false;
+        currentZoom = state.zoom;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        panOriginX = currentZoom.x;
+        panOriginY = currentZoom.y;
+      }
+    };
+
+    const onTouchMove = (e) => {
+      if (mode === 'pinch' && e.touches.length === 2) {
+        e.preventDefault();
+        const dist = getDistance(e.touches);
+        const newScale = Math.max(0.1, Math.min(10, pinchStartScale * (dist / pinchStartDist)));
+        dispatch({
+          type: 'SET_ZOOM',
+          zoom: {
+            scale: newScale,
+            x: pinchMidX - (pinchMidX - currentZoom.x) * (newScale / currentZoom.scale),
+            y: pinchMidY - (pinchMidY - currentZoom.y) * (newScale / currentZoom.scale),
+          },
+        });
+      } else if (mode === 'pan' && e.touches.length === 1) {
+        const dx = e.touches[0].clientX - touchStartX;
+        const dy = e.touches[0].clientY - touchStartY;
+        if (!moved && Math.hypot(dx, dy) < PAN_THRESHOLD) return;
+        moved = true;
+        e.preventDefault();
+        dispatch({
+          type: 'SET_ZOOM',
+          zoom: { ...currentZoom, x: panOriginX + dx, y: panOriginY + dy },
+        });
+      }
+    };
+
+    const onTouchEnd = (e) => {
+      if (moved) e.preventDefault();
+      if (e.touches.length === 0) { mode = 'none'; moved = false; }
+    };
+
+    container.addEventListener('touchstart', onTouchStart, { passive: false });
+    container.addEventListener('touchmove', onTouchMove, { passive: false });
+    container.addEventListener('touchend', onTouchEnd, { passive: false });
+    container.addEventListener('touchcancel', onTouchEnd, { passive: false });
+    return () => {
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', onTouchEnd);
+      container.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [state.zoom, dispatch]);
+
   // --- Add marker on click ---
   const handleImageLayerClick = useCallback((e) => {
     if (!project?.image) return;

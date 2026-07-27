@@ -1,6 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-  <path d="M12 2C7.58 2 4 5.58 4 10c0 5.25 6.4 11.44 7.06 12.06a1.34 1.34 0 0 0 1.88 0C13.6 21.44 20 15.25 20 10c0-4.42-3.58-8-8-8z" fill="#2E7D5B"/>
-  <circle cx="12" cy="10" r="5" fill="#fdfcf8"/>
-  <path d="M12 6.2c-2.4 0-4.3 1.9-4.3 4.2 0 1.55.93 2.9 2.28 3.65L12 15.9l2.02-1.85C15.37 13.3 16.3 11.95 16.3 10.4c0-2.3-1.9-4.2-4.3-4.2z" fill="#1b4d36"/>
-  <path d="M12 8.3v6" stroke="#A7C957" stroke-width="0.9" stroke-linecap="round"/>
+  <ellipse cx="12" cy="6.6" rx="2.2" ry="4.8" fill="#2E7D5B" transform="rotate(0 12 12)"/>
+  <ellipse cx="12" cy="6.6" rx="2.2" ry="4.8" fill="#2E7D5B" transform="rotate(51.43 12 12)"/>
+  <ellipse cx="12" cy="6.6" rx="2.2" ry="4.8" fill="#2E7D5B" transform="rotate(102.86 12 12)"/>
+  <ellipse cx="12" cy="6.6" rx="2.2" ry="4.8" fill="#2E7D5B" transform="rotate(154.29 12 12)"/>
+  <ellipse cx="12" cy="6.6" rx="2.2" ry="4.8" fill="#2E7D5B" transform="rotate(205.71 12 12)"/>
+  <ellipse cx="12" cy="6.6" rx="2.2" ry="4.8" fill="#2E7D5B" transform="rotate(257.14 12 12)"/>
+  <ellipse cx="12" cy="6.6" rx="2.2" ry="4.8" fill="#2E7D5B" transform="rotate(308.57 12 12)"/>
+  <circle cx="12" cy="12" r="2.4" fill="#A7C957"/>
 </svg>

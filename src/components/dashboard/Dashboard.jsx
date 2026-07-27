@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -18,6 +18,8 @@ export default function Dashboard() {
   const [showNewModal, setShowNewModal] = useState(false);
   const [renameTarget, setRenameTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const mobileSearchInputRef = useRef(null);
 
   const filtered = state.projects.filter(p =>
     p.name.toLowerCase().includes(state.searchQuery.toLowerCase())
@@ -69,18 +71,32 @@ export default function Dashboard() {
   return (
     <div id="app">
       <div id="dashboard-view" className="view">
-        <div className="app-brand-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="app-brand-row">
           <Logo size={34} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{user?.email}</span>
+          <div className="app-account-row">
+            <span className="app-account-email">{user?.email}</span>
             <button className="btn" onClick={signOut}>Log Out</button>
           </div>
         </div>
 
         <header>
           <h1 className="title">My Projects</h1>
-          <div className="search-container">
+          <button
+            className="mobile-search-toggle"
+            aria-label="Search"
+            onClick={() => {
+              setMobileSearchOpen(v => !v);
+              setTimeout(() => mobileSearchInputRef.current?.focus(), 50);
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </button>
+          <div className={`search-container${mobileSearchOpen ? ' mobile-open' : ''}`}>
             <input
+              ref={mobileSearchInputRef}
               type="text"
               id="dashboard-search"
               className="search-input"
@@ -89,7 +105,7 @@ export default function Dashboard() {
               onChange={e => dispatch({ type: 'SET_SEARCH_QUERY', query: e.target.value })}
             />
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div className="header-actions">
             <button className="btn" onClick={() => navigate('/calendar')}>
               <span>&#128197;</span> Calendar
             </button>

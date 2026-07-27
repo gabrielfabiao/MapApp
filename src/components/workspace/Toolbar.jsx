@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../../context/AppContext';
 import Logo from '../common/Logo';
@@ -9,17 +10,36 @@ export default function Toolbar({ onImageUpload, onOpenSettings }) {
   const fileInputRef = useRef(null);
   const project = state.currentProject;
   const [showShadowsPopover, setShowShadowsPopover] = useState(false);
-  const popoverRef = useRef(null);
+  const [popoverStyle, setPopoverStyle] = useState(null);
+  const toggleBtnRef = useRef(null);
+  const popoverContentRef = useRef(null);
+
+  const handleToggleClick = () => {
+    if (!showShadowsPopover) {
+      const rect = toggleBtnRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const openAbove = spaceBelow < 90;
+      setPopoverStyle({
+        left: rect.left + rect.width / 2,
+        ...(openAbove ? { bottom: window.innerHeight - rect.top + 12 } : { top: rect.bottom + 12 }),
+      });
+    }
+    setShowShadowsPopover(v => !v);
+  };
 
   useEffect(() => {
     if (!showShadowsPopover) return;
     const handleClickOutside = (e) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target)) {
-        setShowShadowsPopover(false);
-      }
+      if (toggleBtnRef.current?.contains(e.target)) return;
+      if (popoverContentRef.current?.contains(e.target)) return;
+      setShowShadowsPopover(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, [showShadowsPopover]);
 
   const handleTitleClick = (e) => {
@@ -136,12 +156,13 @@ export default function Toolbar({ onImageUpload, onOpenSettings }) {
       </button>
 
       {/* 8/9 — Buildings & Shadows group */}
-      <div className="toolbar-group" ref={popoverRef}>
+      <div className="toolbar-group">
         <button
+          ref={toggleBtnRef}
           className={`btn btn-icon${state.mode === 'buildings' || state.showShadows ? ' active' : ''}`}
           id="buildings-shadows-toggle-btn"
           title="Buildings & Shadows"
-          onClick={() => setShowShadowsPopover(v => !v)}
+          onClick={handleToggleClick}
         >
           {state.showShadows ? (
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
@@ -157,8 +178,8 @@ export default function Toolbar({ onImageUpload, onOpenSettings }) {
           )}
         </button>
 
-        {showShadowsPopover && (
-          <div className="toolbar-popover">
+        {showShadowsPopover && popoverStyle && createPortal(
+          <div className="toolbar-popover" ref={popoverContentRef} style={popoverStyle}>
             <button
               className={`btn btn-icon${state.mode === 'buildings' ? ' active' : ''}`}
               id="mode-buildings-btn"
@@ -191,7 +212,8 @@ export default function Toolbar({ onImageUpload, onOpenSettings }) {
                 </svg>
               )}
             </button>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
 

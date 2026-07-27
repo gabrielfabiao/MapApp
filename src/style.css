@@ -105,6 +105,11 @@ header {
 }
 
 .app-brand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   margin-bottom: 1.25rem;
 }
 
@@ -113,6 +118,26 @@ header {
   font-weight: 800;
   color: var(--amazon-dark);
   letter-spacing: -0.02em;
+}
+
+.app-account-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.app-account-email {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.mobile-search-toggle {
+  display: none;
 }
 
 /* Search */
@@ -379,9 +404,7 @@ header {
 }
 
 .toolbar-popover {
-  position: absolute;
-  top: calc(100% + 0.75rem);
-  left: 50%;
+  position: fixed;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -394,7 +417,7 @@ header {
   padding: 0.5rem 0.75rem;
   box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2);
   white-space: nowrap;
-  z-index: 310;
+  z-index: 2000;
 }
 
 .workspace-toolbar .title {
@@ -1626,8 +1649,19 @@ header {
   }
 
   .search-container {
-    flex: 1;
+    width: 100%;
     max-width: none;
+    order: 1;
+  }
+
+  .header-actions {
+    width: 100%;
+    order: 2;
+  }
+
+  .header-actions .btn {
+    flex: 1;
+    justify-content: center;
   }
 
   /* Grid already switches to 1 col via existing rule */
@@ -1773,6 +1807,63 @@ header {
 
   header .title {
     font-size: 1.25rem;
+    width: auto;
+    flex: 1 1 auto;
+  }
+
+  .app-brand-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .app-account-row {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+  }
+
+  .app-account-row .btn {
+    order: 1;
+  }
+
+  .app-account-email {
+    order: 2;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .header-actions {
+    flex-direction: column;
+  }
+
+  /* Search collapses into an icon button next to the title */
+  .mobile-search-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .search-container {
+    display: none;
+  }
+
+  .search-container.mobile-open {
+    display: block;
+    order: 3;
   }
 
   /* Help button repositioned above toolbar */

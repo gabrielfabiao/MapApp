@@ -1,6 +1,13 @@
 import { useCallback } from 'react';
 import { useAppState } from '../../context/AppContext';
 
+// Extracts client coordinates from either a MouseEvent or a TouchEvent.
+const getPoint = (e) => {
+  if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+  return { x: e.clientX, y: e.clientY };
+};
+
 export default function BuildingsOverlay() {
   const { state, dispatch } = useAppState();
   const project = state.currentProject;
@@ -17,20 +24,23 @@ export default function BuildingsOverlay() {
 
     const b = { ...project.buildings[idx] };
     const rect = img.getBoundingClientRect();
-    const startClientX = e.clientX;
-    const startClientY = e.clientY;
+    const start = getPoint(e);
+    const startClientX = start.x;
+    const startClientY = start.y;
     const startX = b.x, startY = b.y, startW = b.width, startH = b.height;
     const DRAG_THRESHOLD = 3;
     let isDragging = false;
 
-    const onMouseMove = (ev) => {
-      const dist = Math.hypot(ev.clientX - startClientX, ev.clientY - startClientY);
+    const onMove = (ev) => {
+      const p = getPoint(ev);
+      const dist = Math.hypot(p.x - startClientX, p.y - startClientY);
       if (dist < DRAG_THRESHOLD && !isDragging) return;
       isDragging = true;
+      if (ev.cancelable) ev.preventDefault();
       dispatch({ type: 'SET_DRAG_STATE', dragState: { isDragging: true, markerIdx: null } });
 
-      const dx = ((ev.clientX - startClientX) / rect.width) * 100;
-      const dy = ((ev.clientY - startClientY) / rect.height) * 100;
+      const dx = ((p.x - startClientX) / rect.width) * 100;
+      const dy = ((p.y - startClientY) / rect.height) * 100;
       const blockEl = document.querySelector(`.building-block[data-idx="${idx}"]`);
 
       if (action === 'move') {
@@ -44,22 +54,28 @@ export default function BuildingsOverlay() {
       } else if (action === 'rotate') {
         const centerX = rect.left + (startX + startW / 2) / 100 * rect.width;
         const centerY = rect.top + (startY + startH / 2) / 100 * rect.height;
-        b.angle = (Math.atan2(ev.clientY - centerY, ev.clientX - centerX) * 180 / Math.PI) + 90;
+        b.angle = (Math.atan2(p.y - centerY, p.x - centerX) * 180 / Math.PI) + 90;
         if (blockEl) blockEl.style.transform = `rotate(${b.angle}deg)`;
       }
     };
 
-    const onMouseUp = () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+      window.removeEventListener('touchcancel', onUp);
       if (isDragging) {
         dispatch({ type: 'UPDATE_BUILDING', idx, patch: b });
         setTimeout(() => dispatch({ type: 'SET_DRAG_STATE', dragState: { isDragging: false, markerIdx: null } }), 50);
       }
     };
 
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+    window.addEventListener('touchcancel', onUp);
   }, [project, dispatch]);
 
   const handleOverlayMouseDown = useCallback((e) => {
@@ -70,24 +86,30 @@ export default function BuildingsOverlay() {
     const img = document.getElementById('main-image');
     if (!img) return;
     const rect = img.getBoundingClientRect();
-    const startX = ((e.clientX - rect.left) / rect.width) * 100;
-    const startY = ((e.clientY - rect.top) / rect.height) * 100;
+    const start = getPoint(e);
+    const startX = ((start.x - rect.left) / rect.width) * 100;
+    const startY = ((start.y - rect.top) / rect.height) * 100;
 
     let drawState = { active: true, startX, startY, currentX: startX, currentY: startY };
     dispatch({ type: 'SET_DRAWING_STATE', drawingState: drawState });
 
-    const onMouseMove = (ev) => {
+    const onMove = (ev) => {
+      if (ev.cancelable) ev.preventDefault();
+      const p = getPoint(ev);
       drawState = {
         ...drawState,
-        currentX: ((ev.clientX - rect.left) / rect.width) * 100,
-        currentY: ((ev.clientY - rect.top) / rect.height) * 100,
+        currentX: ((p.x - rect.left) / rect.width) * 100,
+        currentY: ((p.y - rect.top) / rect.height) * 100,
       };
       dispatch({ type: 'SET_DRAWING_STATE', drawingState: drawState });
     };
 
-    const onMouseUp = () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+      window.removeEventListener('touchcancel', onUp);
       const width = Math.abs(drawState.currentX - drawState.startX);
       const height = Math.abs(drawState.currentY - drawState.startY);
       if (width > 1 && height > 1) {
@@ -101,8 +123,11 @@ export default function BuildingsOverlay() {
       dispatch({ type: 'SET_DRAWING_STATE', drawingState: null });
     };
 
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+    window.addEventListener('touchcancel', onUp);
   }, [isActive, dispatch]);
 
   const handleBuildingClick = useCallback((e, idx) => {
@@ -122,6 +147,7 @@ export default function BuildingsOverlay() {
       id="buildings-overlay"
       style={{ pointerEvents: isActive ? 'auto' : 'none', display: isActive ? 'block' : 'none' }}
       onMouseDown={handleOverlayMouseDown}
+      onTouchStart={handleOverlayMouseDown}
     >
       {project.buildings.map((b, idx) => (
         <div
@@ -134,6 +160,11 @@ export default function BuildingsOverlay() {
             transform: `rotate(${b.angle || 0}deg)`,
           }}
           onMouseDown={e => {
+            const action = e.target.closest('.rotate-handle') ? 'rotate'
+              : e.target.closest('.resize-handle') ? 'resize' : 'move';
+            if (!e.target.closest('.delete-building-btn')) handleBuildingMouseDown(e, idx, action);
+          }}
+          onTouchStart={e => {
             const action = e.target.closest('.rotate-handle') ? 'rotate'
               : e.target.closest('.resize-handle') ? 'resize' : 'move';
             if (!e.target.closest('.delete-building-btn')) handleBuildingMouseDown(e, idx, action);
