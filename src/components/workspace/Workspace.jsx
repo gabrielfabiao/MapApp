@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppState } from '../../context/AppContext';
-import { Storage } from '../../storage';
 import Toolbar from './Toolbar';
 import ImageArea from './ImageArea';
 import Sidebar from './Sidebar';
@@ -11,6 +10,7 @@ import MarkerEditorModal from './MarkerEditorModal';
 import SettingsModal from './SettingsModal';
 import ConfirmModal from '../common/ConfirmModal';
 import HelpModal from '../common/HelpModal';
+import Logo from '../common/Logo';
 import { fetchWeather } from '../../services/weatherService';
 
 export default function Workspace() {
@@ -22,20 +22,22 @@ export default function Workspace() {
   const [deleteMarkerIdx, setDeleteMarkerIdx] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // Load project from URL on mount
+  // Load project from URL once the account's projects have been hydrated
   useEffect(() => {
+    if (!state.projectsLoaded) return;
+
     const id = searchParams.get('id');
     if (!id) { navigate('/'); return; }
 
     if (state.currentProject?.id !== id) {
-      const project = Storage.getProject(id);
+      const project = state.projects.find(p => p.id === id);
       if (project) {
         dispatch({ type: 'SET_CURRENT_PROJECT', project });
       } else {
         navigate('/');
       }
     }
-  }, []);
+  }, [state.projectsLoaded]);
 
   // Fetch weather when weather drawer opens
   useEffect(() => {
@@ -60,6 +62,14 @@ export default function Workspace() {
     dispatch({ type: 'DELETE_MARKER', idx: deleteMarkerIdx });
     setDeleteMarkerIdx(null);
   };
+
+  if (!state.projectsLoaded) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Logo size={40} />
+      </div>
+    );
+  }
 
   if (!state.currentProject) return null;
 

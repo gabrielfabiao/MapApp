@@ -1,9 +1,11 @@
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useEffect, useReducer } from 'react';
 import { Storage } from '../storage';
 import { reindexMarkers } from '../utils/markerUtils';
+import { useAuth } from './AuthContext';
 
 const initialState = {
-  projects: Storage.loadProjects(),
+  projects: [],
+  projectsLoaded: false,
   currentProject: null,
   searchQuery: '',
   captionSearchQuery: '',
@@ -21,11 +23,17 @@ const initialState = {
   isWeatherOpen: false,
   weatherData: null,
   selectedWeatherDay: 0,
-  settings: Storage.loadSettings(),
+  settings: { plantApiKey: '' },
 };
 
 function reducer(state, action) {
   switch (action.type) {
+    case 'HYDRATE':
+      return { ...state, projects: action.projects, settings: action.settings, projectsLoaded: true };
+
+    case 'RESET_STATE':
+      return { ...initialState, sunDate: new Date() };
+
     case 'SET_PROJECTS':
       return { ...state, projects: action.projects };
 
@@ -34,20 +42,20 @@ function reducer(state, action) {
 
     case 'UPDATE_CURRENT_PROJECT': {
       const updated = { ...state.currentProject, ...action.patch, updatedAt: Date.now() };
-      Storage.saveProject(updated);
+      Storage.saveProject(updated, action.userId).catch(console.error);
       const projects = state.projects.map(p => p.id === updated.id ? updated : p);
       return { ...state, currentProject: updated, projects };
     }
 
     case 'ADD_PROJECT': {
       const projects = [...state.projects, action.project];
-      Storage.saveProjects(projects);
+      Storage.saveProject(action.project, action.userId).catch(console.error);
       return { ...state, projects };
     }
 
     case 'DELETE_PROJECT': {
       const projects = state.projects.filter(p => p.id !== action.id);
-      Storage.deleteProject(action.id);
+      Storage.deleteProject(action.id).catch(console.error);
       return { ...state, projects };
     }
 
@@ -56,7 +64,7 @@ function reducer(state, action) {
         p.id === action.id ? { ...p, name: action.name, updatedAt: Date.now() } : p
       );
       const renamed = projects.find(p => p.id === action.id);
-      Storage.saveProject(renamed);
+      Storage.saveProject(renamed, action.userId).catch(console.error);
       const currentProject = state.currentProject?.id === action.id
         ? { ...state.currentProject, name: action.name }
         : state.currentProject;
@@ -66,7 +74,7 @@ function reducer(state, action) {
     case 'ADD_MARKER': {
       const markers = [...state.currentProject.markers, action.marker];
       const updated = { ...state.currentProject, markers, updatedAt: Date.now() };
-      Storage.saveProject(updated);
+      Storage.saveProject(updated, action.userId).catch(console.error);
       const projects = state.projects.map(p => p.id === updated.id ? updated : p);
       return { ...state, currentProject: updated, projects };
     }
@@ -77,7 +85,7 @@ function reducer(state, action) {
       );
       reindexMarkers({ markers });
       const updated = { ...state.currentProject, markers, updatedAt: Date.now() };
-      Storage.saveProject(updated);
+      Storage.saveProject(updated, action.userId).catch(console.error);
       const projects = state.projects.map(p => p.id === updated.id ? updated : p);
       return { ...state, currentProject: updated, projects };
     }
@@ -86,7 +94,7 @@ function reducer(state, action) {
       const markers = state.currentProject.markers.filter((_, i) => i !== action.idx);
       reindexMarkers({ markers });
       const updated = { ...state.currentProject, markers, updatedAt: Date.now() };
-      Storage.saveProject(updated);
+      Storage.saveProject(updated, action.userId).catch(console.error);
       const projects = state.projects.map(p => p.id === updated.id ? updated : p);
       return { ...state, currentProject: updated, projects, selectedMarkerIdx: null };
     }
@@ -95,7 +103,7 @@ function reducer(state, action) {
       const markers = [...action.markers];
       reindexMarkers({ markers });
       const updated = { ...state.currentProject, markers, updatedAt: Date.now() };
-      Storage.saveProject(updated);
+      Storage.saveProject(updated, action.userId).catch(console.error);
       const projects = state.projects.map(p => p.id === updated.id ? updated : p);
       return { ...state, currentProject: updated, projects };
     }
@@ -105,7 +113,7 @@ function reducer(state, action) {
         i === action.idx ? { ...m, x: action.x, y: action.y } : m
       );
       const updated = { ...state.currentProject, markers, updatedAt: Date.now() };
-      Storage.saveProject(updated);
+      Storage.saveProject(updated, action.userId).catch(console.error);
       const projects = state.projects.map(p => p.id === updated.id ? updated : p);
       return { ...state, currentProject: updated, projects };
     }
@@ -113,7 +121,7 @@ function reducer(state, action) {
     case 'ADD_BUILDING': {
       const buildings = [...state.currentProject.buildings, action.building];
       const updated = { ...state.currentProject, buildings, updatedAt: Date.now() };
-      Storage.saveProject(updated);
+      Storage.saveProject(updated, action.userId).catch(console.error);
       const projects = state.projects.map(p => p.id === updated.id ? updated : p);
       return { ...state, currentProject: updated, projects };
     }
@@ -123,7 +131,7 @@ function reducer(state, action) {
         i === action.idx ? { ...b, ...action.patch } : b
       );
       const updated = { ...state.currentProject, buildings, updatedAt: Date.now() };
-      Storage.saveProject(updated);
+      Storage.saveProject(updated, action.userId).catch(console.error);
       const projects = state.projects.map(p => p.id === updated.id ? updated : p);
       return { ...state, currentProject: updated, projects };
     }
@@ -131,7 +139,7 @@ function reducer(state, action) {
     case 'DELETE_BUILDING': {
       const buildings = state.currentProject.buildings.filter((_, i) => i !== action.idx);
       const updated = { ...state.currentProject, buildings, updatedAt: Date.now() };
-      Storage.saveProject(updated);
+      Storage.saveProject(updated, action.userId).catch(console.error);
       const projects = state.projects.map(p => p.id === updated.id ? updated : p);
       return { ...state, currentProject: updated, projects };
     }
@@ -182,7 +190,7 @@ function reducer(state, action) {
       return { ...state, showShadows: !state.showShadows };
 
     case 'SAVE_SETTINGS': {
-      Storage.saveSettings(action.settings);
+      Storage.saveSettings(action.settings, action.userId).catch(console.error);
       return { ...state, settings: action.settings };
     }
 
@@ -194,9 +202,27 @@ function reducer(state, action) {
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
+  const { user } = useAuth();
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  useEffect(() => {
+    if (!user) {
+      dispatch({ type: 'RESET_STATE' });
+      return;
+    }
+    let cancelled = false;
+    Promise.all([Storage.loadProjects(), Storage.loadSettings()])
+      .then(([projects, settings]) => {
+        if (!cancelled) dispatch({ type: 'HYDRATE', projects, settings });
+      })
+      .catch(err => console.error('Failed to load data', err));
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  const wrappedDispatch = (action) => dispatch({ ...action, userId: user?.id });
+
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{ state, dispatch: wrappedDispatch }}>
       {children}
     </AppContext.Provider>
   );

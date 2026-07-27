@@ -104,6 +104,17 @@ header {
   letter-spacing: -0.025em;
 }
 
+.app-brand-row {
+  margin-bottom: 1.25rem;
+}
+
+.app-logo-wordmark {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--amazon-dark);
+  letter-spacing: -0.02em;
+}
+
 /* Search */
 .search-container {
   position: relative;
@@ -224,15 +235,22 @@ header {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  border: none;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-primary);
   font-size: 0.875rem;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
 }
 
+.btn:hover {
+  background: #e2e8f0;
+}
+
 .btn-primary {
   background-color: var(--amazon-primary);
+  border-color: var(--amazon-primary);
   color: white;
 }
 
@@ -242,6 +260,7 @@ header {
 
 .btn-danger {
   background-color: #ef4444;
+  border-color: #ef4444;
   color: white;
 }
 
@@ -258,6 +277,7 @@ header {
   display: flex;
   justify-content: center;
   align-items: center;
+  touch-action: none;
 }
 
 .image-canvas {
@@ -353,6 +373,30 @@ header {
   color: #fff;
 }
 
+.toolbar-group {
+  position: relative;
+  display: inline-flex;
+}
+
+.toolbar-popover {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(10, 18, 35, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 9999px;
+  padding: 0.5rem 0.75rem;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2);
+  white-space: nowrap;
+  z-index: 310;
+}
+
 .workspace-toolbar .title {
   font-size: 1.1rem;
   font-weight: 700;
@@ -374,6 +418,12 @@ header {
 }
 
 /* Sidebar Tabs */
+.sidebar-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
 .sidebar-tabs .btn {
   background: var(--card-bg);
   color: var(--text-primary);
@@ -381,6 +431,7 @@ header {
   font-size: 0.8rem;
   font-weight: 600;
   border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
 }
 
 .sidebar-tabs .btn.btn-primary {
@@ -544,7 +595,8 @@ header {
   border-left: 1px solid rgba(0,0,0,0.08);
   box-shadow: -8px 0 40px rgba(0,0,0,0.12);
   width: 100%;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   padding: 1.5rem;
   padding-top: 5.5rem;
   transform: translateX(100%);
@@ -568,7 +620,8 @@ header {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-secondary);
-  margin-bottom: 1rem;
+  margin-top: 0.25rem;
+  margin-bottom: 1.25rem;
   padding-left: 0.25rem;
 }
 
@@ -657,6 +710,8 @@ header {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-left: 6px;
+  padding-left: 2px;
 }
 
 .caption-item {
@@ -681,7 +736,6 @@ header {
   align-items: center;
   gap: 0.75rem;
   transition: all 0.2s ease;
-  pointer-events: none;
 }
 
 .caption-item:hover .caption-item-card {
@@ -974,11 +1028,11 @@ header {
 
 /* Tree settings in editor */
 .tree-settings-panel {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: rgba(34, 197, 94, 0.1);
+  margin: 1.5rem 0;
+  padding: 0.875rem 1rem;
+  background: var(--card-bg);
   border-radius: 0.5rem;
-  border: 1px dashed rgba(34, 197, 94, 0.3);
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
 }
 
@@ -1375,4 +1429,356 @@ header {
   min-width: 40px;
   padding: 0.4rem 0.8rem;
   font-size: 0.9rem;
+}
+
+/* Sidebar scroll area */
+.sidebar-scroll-area {
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
+}
+
+.sidebar-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll-area::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+
+.sidebar-scroll-area::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.32);
+}
+
+/* Calendar */
+.calendar-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.calendar-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-month-label {
+  flex: 1;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--amazon-dark);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-weekdays {
+  margin-bottom: 0.5rem;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  padding-bottom: 0.5rem;
+}
+
+.calendar-days {
+  gap: 0.5rem;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  background: var(--glass-bg);
+}
+
+.calendar-day-outside {
+  opacity: 0.4;
+}
+
+.calendar-day-today {
+  border-color: var(--amazon-primary);
+  box-shadow: 0 0 0 2px rgba(46, 125, 91, 0.15);
+}
+
+.calendar-day-number {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.calendar-day-today .calendar-day-number {
+  color: var(--amazon-primary);
+  font-weight: 800;
+}
+
+.calendar-care-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
+  border-radius: 9999px;
+  padding: 0.2rem 0.65rem;
+  margin-left: 0.6rem;
+  vertical-align: middle;
+}
+
+.calendar-care-badge-prune {
+  background: rgba(217, 119, 6, 0.15);
+  color: #b45309;
+}
+
+.calendar-care-badge-fertilize {
+  background: rgba(46, 125, 91, 0.15);
+  color: var(--amazon-primary);
+}
+
+.calendar-care-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.calendar-care-group-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.calendar-care-group-title-prune {
+  color: #b45309;
+}
+
+.calendar-care-group-title-fertilize {
+  color: var(--amazon-primary);
+}
+
+.calendar-care-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--border-color);
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.calendar-care-item-project {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* ============================================================
+   RESPONSIVE — Tablet & Mobile
+   ============================================================ */
+
+/* ---------- Tablet (≤ 1024px) ---------- */
+@media (max-width: 1024px) {
+  .sidebar-drawer {
+    width: 360px;
+  }
+}
+
+/* ---------- Tablet portrait / large phone (≤ 768px) ---------- */
+@media (max-width: 768px) {
+  /* Dashboard */
+  #app {
+    padding: 1.25rem;
+  }
+
+  header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  header .title {
+    width: 100%;
+    font-size: 1.5rem;
+  }
+
+  .search-container {
+    flex: 1;
+    max-width: none;
+  }
+
+  /* Grid already switches to 1 col via existing rule */
+
+  /* Card actions always visible on touch devices */
+  .card-actions {
+    opacity: 1;
+  }
+
+  /* Sidebar full-width */
+  .sidebar-drawer {
+    width: 100%;
+  }
+
+  .sidebar-panel {
+    padding-top: 4.5rem;
+  }
+
+  /* Modals */
+  .modal {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    max-height: 95vh;
+  }
+
+  .modal.help-modal-content {
+    width: 95%;
+    padding: 2.5rem 1.25rem 1.5rem;
+  }
+
+  /* Gallery smaller columns on mobile */
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  }
+}
+
+/* ---------- Mobile (≤ 640px) ---------- */
+@media (max-width: 640px) {
+  .calendar-care-list {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-month-label {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+
+  .calendar-care-badge {
+    margin-left: 0;
+  }
+
+  /* Move toolbar to bottom, full-width, scrollable */
+  .workspace-toolbar {
+    top: auto;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    transform: none;
+    border-radius: 1.25rem;
+    padding: 0.6rem 1rem;
+    gap: 0.6rem;
+    overflow-x: auto;
+    /* hide scrollbar but keep scrollable */
+    scrollbar-width: none;
+  }
+
+  .workspace-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide hint — too small to be useful */
+  .workspace-toolbar .hint {
+    display: none;
+  }
+
+  /* Truncate long project names */
+  .workspace-toolbar .toolbar-title {
+    max-width: 20ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Slightly smaller icon buttons */
+  .workspace-toolbar .btn-icon {
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+  }
+
+  .workspace-toolbar .btn {
+    flex-shrink: 0;
+  }
+
+  /* Sun compass smaller + move up from toolbar */
+  #sun-overlay-container {
+    bottom: 5.5rem !important;
+    left: 1rem !important;
+    transform: scale(0.8);
+    transform-origin: bottom left;
+  }
+
+  /* Sidebar covers full screen on mobile */
+  .sidebar-drawer {
+    width: 100%;
+    height: 100%;
+  }
+
+  .sidebar-panel {
+    padding: 1rem;
+    padding-top: 4rem;
+  }
+
+  /* Modals full-screen on small phones */
+  .modal {
+    width: 100%;
+    max-width: none;
+    min-height: 50vh;
+    border-radius: 1.25rem 1.25rem 0 0;
+    align-self: flex-end;
+    margin: 0;
+    padding: 1.25rem;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+  }
+
+  /* Keep confirm/rename modals centred */
+  .modal-overlay .modal[style*="max-width: 400px"],
+  .modal-overlay .modal.help-modal-content {
+    align-self: center;
+    border-radius: 1rem;
+    min-height: unset;
+  }
+
+  /* Dashboard */
+  #app {
+    padding: 1rem;
+  }
+
+  header .title {
+    font-size: 1.25rem;
+  }
+
+  /* Help button repositioned above toolbar */
+  .global-help-btn {
+    bottom: 5.5rem;
+    top: auto;
+    right: 1rem;
+  }
 }

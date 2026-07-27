@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { generateId } from '../../utils/markerUtils';
 import ProjectGrid from './ProjectGrid';
 import NewProjectModal from './NewProjectModal';
 import RenameProjectModal from './RenameProjectModal';
 import ConfirmModal from '../common/ConfirmModal';
 import HelpModal from '../common/HelpModal';
+import Logo from '../common/Logo';
 
 export default function Dashboard() {
   const { state, dispatch } = useAppState();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const [showNewModal, setShowNewModal] = useState(false);
@@ -55,9 +58,25 @@ export default function Dashboard() {
     setDeleteTarget(null);
   };
 
+  if (!state.projectsLoaded) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Logo size={40} />
+      </div>
+    );
+  }
+
   return (
     <div id="app">
       <div id="dashboard-view" className="view">
+        <div className="app-brand-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Logo size={34} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{user?.email}</span>
+            <button className="btn" onClick={signOut}>Log Out</button>
+          </div>
+        </div>
+
         <header>
           <h1 className="title">My Projects</h1>
           <div className="search-container">
@@ -70,9 +89,14 @@ export default function Dashboard() {
               onChange={e => dispatch({ type: 'SET_SEARCH_QUERY', query: e.target.value })}
             />
           </div>
-          <button className="btn btn-primary" onClick={() => setShowNewModal(true)}>
-            <span>+</span> New Project
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button className="btn" onClick={() => navigate('/calendar')}>
+              <span>&#128197;</span> Calendar
+            </button>
+            <button className="btn btn-primary" onClick={() => setShowNewModal(true)}>
+              <span>+</span> New Project
+            </button>
+          </div>
         </header>
 
         <ProjectGrid

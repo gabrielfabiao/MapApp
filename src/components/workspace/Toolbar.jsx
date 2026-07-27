@@ -1,12 +1,26 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../../context/AppContext';
+import Logo from '../common/Logo';
 
 export default function Toolbar({ onImageUpload, onOpenSettings }) {
   const { state, dispatch } = useAppState();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const project = state.currentProject;
+  const [showShadowsPopover, setShowShadowsPopover] = useState(false);
+  const popoverRef = useRef(null);
+
+  useEffect(() => {
+    if (!showShadowsPopover) return;
+    const handleClickOutside = (e) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target)) {
+        setShowShadowsPopover(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showShadowsPopover]);
 
   const handleTitleClick = (e) => {
     const span = e.currentTarget;
@@ -48,6 +62,9 @@ export default function Toolbar({ onImageUpload, onOpenSettings }) {
 
   return (
     <div className="workspace-toolbar">
+
+      {/* 0 — Brand mark */}
+      <Logo size={20} showWordmark={false} />
 
       {/* 1 — Back */}
       <button className="btn" id="back-btn" title="Go Back" onClick={() => navigate('/')}>
@@ -118,30 +135,65 @@ export default function Toolbar({ onImageUpload, onOpenSettings }) {
         </svg>
       </button>
 
-      {/* 8 — Buildings mode */}
-      <button
-        className={`btn btn-icon${state.mode === 'buildings' ? ' active' : ''}`}
-        id="mode-buildings-btn"
-        title="Buildings Mode"
-        onClick={() => dispatch({ type: 'SET_MODE', mode: state.mode === 'buildings' ? 'markers' : 'buildings' })}
-      >
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-        </svg>
-      </button>
+      {/* 8/9 — Buildings & Shadows group */}
+      <div className="toolbar-group" ref={popoverRef}>
+        <button
+          className={`btn btn-icon${state.mode === 'buildings' || state.showShadows ? ' active' : ''}`}
+          id="buildings-shadows-toggle-btn"
+          title="Buildings & Shadows"
+          onClick={() => setShowShadowsPopover(v => !v)}
+        >
+          {state.showShadows ? (
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+              <ellipse cx="12" cy="18" rx="6" ry="2.5" opacity="0.4"/>
+              <circle cx="12" cy="10" r="5"/>
+            </svg>
+          ) : (
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <ellipse cx="12" cy="18" rx="6" ry="2.5" opacity="0.4"/>
+              <circle cx="12" cy="10" r="5"/>
+              <line x1="4" y1="4" x2="20" y2="20"/>
+            </svg>
+          )}
+        </button>
 
-      {/* 9 — Shadows toggle */}
-      <button
-        className={`btn btn-icon${state.showShadows ? ' active' : ''}`}
-        id="toggle-shadows-btn"
-        title="Toggle Shadows"
-        onClick={() => dispatch({ type: 'TOGGLE_SHADOWS' })}
-      >
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-          <ellipse cx="12" cy="18" rx="6" ry="2.5" opacity="0.4"/>
-          <circle cx="12" cy="10" r="5"/>
-        </svg>
-      </button>
+        {showShadowsPopover && (
+          <div className="toolbar-popover">
+            <button
+              className={`btn btn-icon${state.mode === 'buildings' ? ' active' : ''}`}
+              id="mode-buildings-btn"
+              title="Buildings Mode"
+              onClick={() => dispatch({ type: 'SET_MODE', mode: state.mode === 'buildings' ? 'markers' : 'buildings' })}
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m15 12-8.5 8.5a2.12 2.12 0 1 1-3-3L12 9"/>
+                <path d="M17.64 15 22 10.64"/>
+                <path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 0 0-3.94-1.64H9l.92.82A6.18 6.18 0 0 1 12 8.4v1.56l2 2h2.47l2.26 1.91"/>
+              </svg>
+            </button>
+
+            <button
+              className={`btn btn-icon${state.showShadows ? ' active' : ''}`}
+              id="toggle-shadows-btn"
+              title={state.showShadows ? 'Shadows: ON' : 'Shadows: OFF'}
+              onClick={() => dispatch({ type: 'TOGGLE_SHADOWS' })}
+            >
+              {state.showShadows ? (
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="9"/>
+                  <path d="M12 3v18" strokeLinecap="round"/>
+                  <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/>
+                </svg>
+              ) : (
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="9"/>
+                  <path d="M12 3v18" strokeLinecap="round"/>
+                </svg>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* 10 — Sidebar toggle */}
       <button

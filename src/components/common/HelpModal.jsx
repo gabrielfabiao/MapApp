@@ -32,6 +32,14 @@ const slides = [
       'Toggle Shadows on/off from the toolbar.',
     ],
   },
+  {
+    header: '📅 Calendar',
+    title: 'Stay on Top of Maintenance',
+    items: [
+      'Once you have your garden labeled, check the Calendar for important maintenance tasks to do.',
+      'See pruning and fertilizing windows for every identified plant across all your projects.',
+    ],
+  },
 ];
 
 export default function HelpModal() {

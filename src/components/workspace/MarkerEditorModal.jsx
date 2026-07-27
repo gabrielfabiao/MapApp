@@ -112,22 +112,22 @@ export default function MarkerEditorModal({ markerIdx, onClose }) {
 
           <div className="form-group">
             <label className="form-label">Plant ID (Scientific Name)</label>
-            <div style={{ minHeight: '2.5rem', border: '1px solid var(--amazon-border)', borderRadius: '0.25rem', padding: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#fff' }}>
-              {sciName ? (
+            {sciName ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <div className="caption-label-chip" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--amazon-light)', margin: 0 }}>
                   <span style={{ fontStyle: 'italic' }}>{sciName}</span>
                   <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: 'var(--amazon-dark)' }} onClick={() => setSciName('')}>&times;</button>
                 </div>
-              ) : (
-                <>
-                  <input type="text" className="search-input" style={{ flex: 1, paddingLeft: '0.5rem' }} placeholder="e.g. Quercus robur" id="manual-sci-name" />
-                  <button className="btn btn-sm" onClick={() => {
-                    const val = document.getElementById('manual-sci-name')?.value.trim();
-                    if (val) setSciName(val);
-                  }}>Add</button>
-                </>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input type="text" className="search-input" style={{ flex: 1, paddingLeft: '1rem' }} placeholder="e.g. Quercus robur" id="manual-sci-name" />
+                <button className="btn btn-sm" onClick={() => {
+                  const val = document.getElementById('manual-sci-name')?.value.trim();
+                  if (val) setSciName(val);
+                }}>Add</button>
+              </div>
+            )}
           </div>
 
           <div className="form-group">
@@ -136,9 +136,9 @@ export default function MarkerEditorModal({ markerIdx, onClose }) {
           </div>
 
           <div className="tree-settings-panel">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <input type="checkbox" id="edit-is-tree" style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }} checked={isTree} onChange={e => setIsTree(e.target.checked)} />
-              <label htmlFor="edit-is-tree" className="form-label" style={{ marginBottom: 0, cursor: 'pointer', color: '#15803d', fontWeight: 'bold' }}>Designate as a Tree 🌳</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input type="checkbox" id="edit-is-tree" style={{ width: '1.2rem', height: '1.2rem', margin: 0, cursor: 'pointer', flexShrink: 0 }} checked={isTree} onChange={e => setIsTree(e.target.checked)} />
+              <label htmlFor="edit-is-tree" className="form-label" style={{ display: 'flex', alignItems: 'center', margin: 0, cursor: 'pointer', color: 'var(--amazon-primary)', fontWeight: 'bold' }}>Designate as a Tree 🌳</label>
             </div>
             {isTree && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
