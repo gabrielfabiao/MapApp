@@ -1802,6 +1802,21 @@ header {
     min-height: unset;
   }
 
+  /* Close button: pin to the top of the scrolled viewport rather than a
+     fixed offset from the modal's (possibly very tall) top edge, which can
+     land under the browser's own address-bar chrome on tall forms */
+  .modal-close {
+    position: sticky;
+    top: 0;
+    width: fit-content;
+    margin-left: auto;
+    margin-bottom: -3rem;
+    background: var(--bg-color);
+    border-radius: 9999px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    z-index: 20;
+  }
+
   /* Dashboard */
   #app {
     padding: 1rem;

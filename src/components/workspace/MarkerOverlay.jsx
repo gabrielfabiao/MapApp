@@ -1,6 +1,13 @@
 import { useCallback } from 'react';
 import { useAppState } from '../../context/AppContext';
 
+// Extracts client coordinates from either a MouseEvent or a TouchEvent.
+const getPoint = (e) => {
+  if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+  return { x: e.clientX, y: e.clientY };
+};
+
 export default function MarkerOverlay({ onMarkerClick, onMarkerDelete }) {
   const { state, dispatch } = useAppState();
   const project = state.currentProject;
@@ -17,36 +24,45 @@ export default function MarkerOverlay({ onMarkerClick, onMarkerDelete }) {
 
     const marker = project.markers[idx];
     const markerEl = document.getElementById(`marker-${idx}`);
-    const startClientX = e.clientX;
-    const startClientY = e.clientY;
+    const start = getPoint(e);
+    const startClientX = start.x;
+    const startClientY = start.y;
     const DRAG_THRESHOLD = 3;
     let isDragging = false;
 
-    const onMouseMove = (ev) => {
-      const dist = Math.hypot(ev.clientX - startClientX, ev.clientY - startClientY);
+    const onMove = (ev) => {
+      const p = getPoint(ev);
+      const dist = Math.hypot(p.x - startClientX, p.y - startClientY);
       if (dist < DRAG_THRESHOLD && !isDragging) return;
       isDragging = true;
+      if (ev.cancelable) ev.preventDefault();
       dispatch({ type: 'SET_DRAG_STATE', dragState: { isDragging: true, markerIdx: idx } });
 
       const rect = img.getBoundingClientRect();
-      const x = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100));
-      const y = Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100));
+      const x = Math.max(0, Math.min(100, ((p.x - rect.left) / rect.width) * 100));
+      const y = Math.max(0, Math.min(100, ((p.y - rect.top) / rect.height) * 100));
       marker.x = x;
       marker.y = y;
       if (markerEl) { markerEl.style.left = `${x}%`; markerEl.style.top = `${y}%`; }
     };
 
-    const onMouseUp = () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+      window.removeEventListener('touchcancel', onUp);
       if (isDragging) {
         dispatch({ type: 'MOVE_MARKER', idx, x: marker.x, y: marker.y });
         setTimeout(() => dispatch({ type: 'SET_DRAG_STATE', dragState: { isDragging: false, markerIdx: null } }), 50);
       }
     };
 
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+    window.addEventListener('touchcancel', onUp);
   }, [state.mode, project, dispatch]);
 
   return (
@@ -61,6 +77,7 @@ export default function MarkerOverlay({ onMarkerClick, onMarkerDelete }) {
             data-idx={idx}
             style={{ left: `${m.x}%`, top: `${m.y}%` }}
             onMouseDown={e => handleMarkerMouseDown(e, idx)}
+            onTouchStart={e => handleMarkerMouseDown(e, idx)}
             onClick={e => {
               e.stopPropagation();
               if (!state.dragState.isDragging) onMarkerClick(idx);
