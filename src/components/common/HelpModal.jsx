@@ -95,6 +95,8 @@ export default function HelpModal() {
               </div>
               <button className="btn btn-primary" onClick={handleNext}>&gt;</button>
             </div>
+
+            <button className="btn modal-bottom-close" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={close}>Close</button>
           </div>
         </div>
       )}

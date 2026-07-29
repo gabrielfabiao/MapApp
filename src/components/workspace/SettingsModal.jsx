@@ -35,6 +35,7 @@ export default function SettingsModal({ isOpen, onClose }) {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+          <button className="btn modal-bottom-close" onClick={onClose}>Close</button>
           <button className="btn btn-primary" onClick={handleSave}>Save Settings</button>
         </div>
       </div>
