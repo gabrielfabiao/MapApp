@@ -104,7 +104,7 @@ export default function Toolbar({ onImageUpload, onOpenSettings }) {
       </h1>
 
       {/* 3 — Hint */}
-      <span className="hint">Scroll: Zoom &bull; Shift+Drag: Pan</span>
+      <span className="hint">Scroll: Zoom &bull; Space+Drag: Pan</span>
 
       {/* 4 — Upload image */}
       <button className="btn btn-icon" id="upload-btn" title="Upload Image" onClick={() => fileInputRef.current?.click()}>

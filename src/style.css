@@ -70,6 +70,7 @@ body {
   padding: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -85,6 +86,7 @@ body {
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--bg-color);
 }
@@ -1718,7 +1720,7 @@ header {
   /* Move toolbar to bottom, full-width, scrollable */
   .workspace-toolbar {
     top: auto;
-    bottom: 1rem;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
     left: 1rem;
     right: 1rem;
     transform: none;

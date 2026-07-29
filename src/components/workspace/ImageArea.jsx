@@ -10,6 +10,36 @@ export default function ImageArea({ onMarkerClick, onMarkerDelete }) {
   const containerRef = useRef(null);
   const project = state.currentProject;
 
+  // Kept in sync with state.zoom so gesture handlers can always read the
+  // latest value without needing state.zoom in their effect dependencies
+  // (which would tear down/rebuild the listeners on every drag step).
+  const zoomRef = useRef(state.zoom);
+  useEffect(() => { zoomRef.current = state.zoom; }, [state.zoom]);
+
+  // --- Track spacebar-held state for Space+Drag panning ---
+  const isSpaceHeldRef = useRef(false);
+  useEffect(() => {
+    const isTypingTarget = (el) =>
+      el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable;
+
+    const onKeyDown = (e) => {
+      if (e.code !== 'Space' || isTypingTarget(e.target)) return;
+      e.preventDefault();
+      isSpaceHeldRef.current = true;
+    };
+    const onKeyUp = (e) => {
+      if (e.code !== 'Space') return;
+      isSpaceHeldRef.current = false;
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+    };
+  }, []);
+
   // --- Zoom ---
   useEffect(() => {
     const container = containerRef.current;
@@ -18,11 +48,12 @@ export default function ImageArea({ onMarkerClick, onMarkerDelete }) {
     const onWheel = (e) => {
       e.preventDefault();
       e.stopPropagation();
+      const zoom = zoomRef.current;
       const delta = -e.deltaY;
       const scaleFactor = 1.1;
-      const newScale = delta > 0 ? state.zoom.scale * scaleFactor : state.zoom.scale / scaleFactor;
+      const newScale = delta > 0 ? zoom.scale * scaleFactor : zoom.scale / scaleFactor;
       const clampedScale = Math.max(0.1, Math.min(10, newScale));
-      if (clampedScale === state.zoom.scale) return;
+      if (clampedScale === zoom.scale) return;
 
       const rect = container.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
@@ -31,29 +62,29 @@ export default function ImageArea({ onMarkerClick, onMarkerDelete }) {
         type: 'SET_ZOOM',
         zoom: {
           scale: clampedScale,
-          x: mouseX - (mouseX - state.zoom.x) * (clampedScale / state.zoom.scale),
-          y: mouseY - (mouseY - state.zoom.y) * (clampedScale / state.zoom.scale),
+          x: mouseX - (mouseX - zoom.x) * (clampedScale / zoom.scale),
+          y: mouseY - (mouseY - zoom.y) * (clampedScale / zoom.scale),
         },
       });
     };
 
     container.addEventListener('wheel', onWheel, { passive: false, capture: true });
     return () => container.removeEventListener('wheel', onWheel, { capture: true });
-  }, [state.zoom, dispatch]);
+  }, [dispatch]);
 
-  // --- Pan (Shift+Drag) ---
+  // --- Pan (Space+Drag) ---
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     let isPanning = false;
     let startPanX = 0, startPanY = 0;
-    let currentZoom = state.zoom;
+    let currentZoom = zoomRef.current;
 
     const onMouseDown = (e) => {
-      if (!e.shiftKey) return;
+      if (!isSpaceHeldRef.current) return;
       isPanning = true;
-      currentZoom = state.zoom;
+      currentZoom = zoomRef.current;
       container.querySelector('#image-canvas')?.classList.add('panning');
       startPanX = e.clientX - currentZoom.x;
       startPanY = e.clientY - currentZoom.y;
@@ -84,7 +115,7 @@ export default function ImageArea({ onMarkerClick, onMarkerDelete }) {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [state.zoom, dispatch]);
+  }, [dispatch]);
 
   // --- Touch: pinch-to-zoom + single-finger pan ---
   useEffect(() => {
@@ -99,7 +130,7 @@ export default function ImageArea({ onMarkerClick, onMarkerDelete }) {
     );
 
     let mode = 'none'; // 'none' | 'pan' | 'pinch'
-    let currentZoom = state.zoom;
+    let currentZoom = zoomRef.current;
     let touchStartX = 0, touchStartY = 0;
     let panOriginX = 0, panOriginY = 0;
     let moved = false;
@@ -113,7 +144,7 @@ export default function ImageArea({ onMarkerClick, onMarkerDelete }) {
       if (e.touches.length === 2) {
         mode = 'pinch';
         moved = true;
-        currentZoom = state.zoom;
+        currentZoom = zoomRef.current;
         pinchStartDist = getDistance(e.touches);
         pinchStartScale = currentZoom.scale;
         const rect = container.getBoundingClientRect();
@@ -123,7 +154,7 @@ export default function ImageArea({ onMarkerClick, onMarkerDelete }) {
       } else if (e.touches.length === 1) {
         mode = 'pan';
         moved = false;
-        currentZoom = state.zoom;
+        currentZoom = zoomRef.current;
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
         panOriginX = currentZoom.x;
@@ -172,13 +203,13 @@ export default function ImageArea({ onMarkerClick, onMarkerDelete }) {
       container.removeEventListener('touchend', onTouchEnd);
       container.removeEventListener('touchcancel', onTouchEnd);
     };
-  }, [state.zoom, dispatch]);
+  }, [dispatch]);
 
   // --- Add marker on click ---
   const handleImageLayerClick = useCallback((e) => {
     if (!project?.image) return;
     if (state.mode === 'buildings') return;
-    if (e.shiftKey || state.dragState.isDragging) return;
+    if (isSpaceHeldRef.current || state.dragState.isDragging) return;
     if (e.target.closest('.marker') || e.target.closest('.delete-btn')) return;
 
     const img = e.currentTarget.querySelector('#main-image');

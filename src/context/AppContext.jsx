@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer } from 'react';
+import { createContext, useCallback, useContext, useEffect, useReducer } from 'react';
 import { Storage } from '../storage';
 import { reindexMarkers } from '../utils/markerUtils';
 import { useAuth } from './AuthContext';
@@ -219,7 +219,10 @@ export function AppProvider({ children }) {
     return () => { cancelled = true; };
   }, [user?.id]);
 
-  const wrappedDispatch = (action) => dispatch({ ...action, userId: user?.id });
+  const wrappedDispatch = useCallback(
+    (action) => dispatch({ ...action, userId: user?.id }),
+    [user?.id]
+  );
 
   return (
     <AppContext.Provider value={{ state, dispatch: wrappedDispatch }}>
