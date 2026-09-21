@@ -1,9 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useReducer } from 'react';
+'use client';
+
+import { createContext, useCallback, useContext, useReducer } from 'react';
 import { Storage } from '../storage';
 import { reindexMarkers } from '../utils/markerUtils';
-import { useAuth } from './AuthContext';
 
-const initialState = {
+const baseState = {
   projects: [],
   projectsLoaded: false,
   currentProject: null,
@@ -28,12 +29,6 @@ const initialState = {
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'HYDRATE':
-      return { ...state, projects: action.projects, settings: action.settings, projectsLoaded: true };
-
-    case 'RESET_STATE':
-      return { ...initialState, sunDate: new Date() };
-
     case 'SET_PROJECTS':
       return { ...state, projects: action.projects };
 
@@ -201,23 +196,22 @@ function reducer(state, action) {
 
 const AppContext = createContext(null);
 
-export function AppProvider({ children }) {
-  const { user } = useAuth();
-  const [state, dispatch] = useReducer(reducer, initialState);
+function initState({ initialProjects, initialSettings }) {
+  return {
+    ...baseState,
+    sunDate: new Date(),
+    projects: initialProjects,
+    settings: initialSettings,
+    projectsLoaded: true,
+  };
+}
 
-  useEffect(() => {
-    if (!user) {
-      dispatch({ type: 'RESET_STATE' });
-      return;
-    }
-    let cancelled = false;
-    Promise.all([Storage.loadProjects(), Storage.loadSettings()])
-      .then(([projects, settings]) => {
-        if (!cancelled) dispatch({ type: 'HYDRATE', projects, settings });
-      })
-      .catch(err => console.error('Failed to load data', err));
-    return () => { cancelled = true; };
-  }, [user?.id]);
+export function AppProvider({ user, initialProjects, initialSettings, children }) {
+  const [state, dispatch] = useReducer(
+    reducer,
+    { initialProjects, initialSettings },
+    initState
+  );
 
   const wrappedDispatch = useCallback(
     (action) => dispatch({ ...action, userId: user?.id }),
@@ -225,7 +219,7 @@ export function AppProvider({ children }) {
   );
 
   return (
-    <AppContext.Provider value={{ state, dispatch: wrappedDispatch }}>
+    <AppContext.Provider value={{ state, dispatch: wrappedDispatch, user }}>
       {children}
     </AppContext.Provider>
   );

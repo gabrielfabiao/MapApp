@@ -1,5 +1,7 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppState } from '../../context/AppContext';
 import Toolbar from './Toolbar';
 import ImageArea from './ImageArea';
@@ -15,8 +17,8 @@ import { fetchWeather } from '../../services/weatherService';
 
 export default function Workspace() {
   const { state, dispatch } = useAppState();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [editingMarkerIdx, setEditingMarkerIdx] = useState(null);
   const [deleteMarkerIdx, setDeleteMarkerIdx] = useState(null);
@@ -27,14 +29,14 @@ export default function Workspace() {
     if (!state.projectsLoaded) return;
 
     const id = searchParams.get('id');
-    if (!id) { navigate('/'); return; }
+    if (!id) { router.push('/'); return; }
 
     if (state.currentProject?.id !== id) {
       const project = state.projects.find(p => p.id === id);
       if (project) {
         dispatch({ type: 'SET_CURRENT_PROJECT', project });
       } else {
-        navigate('/');
+        router.push('/');
       }
     }
   }, [state.projectsLoaded]);
@@ -60,8 +62,14 @@ export default function Workspace() {
 
   const handleConfirmDelete = () => {
     dispatch({ type: 'DELETE_MARKER', idx: deleteMarkerIdx });
+    if (editingMarkerIdx === deleteMarkerIdx) setEditingMarkerIdx(null);
     setDeleteMarkerIdx(null);
   };
+
+  const deleteTarget = deleteMarkerIdx !== null
+    ? state.currentProject?.markers[deleteMarkerIdx]
+    : null;
+  const deleteTargetName = deleteTarget?.title || deleteTarget?.label || 'this marker';
 
   if (!state.projectsLoaded) {
     return (
@@ -89,7 +97,10 @@ export default function Workspace() {
 
           <WeatherDrawer />
 
-          <Sidebar onMarkerEdit={idx => setEditingMarkerIdx(idx)} />
+          <Sidebar
+            onMarkerEdit={idx => setEditingMarkerIdx(idx)}
+            onMarkerDelete={handleMarkerDelete}
+          />
         </div>
       </div>
 
@@ -98,6 +109,7 @@ export default function Workspace() {
       <MarkerEditorModal
         markerIdx={editingMarkerIdx}
         onClose={() => setEditingMarkerIdx(null)}
+        onDelete={handleMarkerDelete}
       />
 
       <SettingsModal
@@ -108,7 +120,7 @@ export default function Workspace() {
       <ConfirmModal
         isOpen={deleteMarkerIdx !== null}
         title="Delete Marker"
-        message="Are you sure you want to remove this marker? This will also remove its photos and notes."
+        message={`Are you sure you want to delete "${deleteTargetName}"? This will also remove its photos and notes.`}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteMarkerIdx(null)}
       />

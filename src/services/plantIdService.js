@@ -29,7 +29,7 @@ export const PlantIdService = {
         
         formData.append('organs', 'auto');
 
-        const apiUrl = `/plantnet/v2/identify/all?api-key=${apiKey}`;
+        const apiUrl = `/api/plantnet/v2/identify/all?api-key=${apiKey}`;
         console.log("PlantIdService: Making request to proxy URL:", apiUrl);
 
         try {

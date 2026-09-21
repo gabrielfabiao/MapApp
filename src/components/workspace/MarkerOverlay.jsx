@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback } from 'react';
 import { useAppState } from '../../context/AppContext';
 
@@ -11,7 +13,6 @@ const getPoint = (e) => {
 export default function MarkerOverlay({ onMarkerClick, onMarkerDelete }) {
   const { state, dispatch } = useAppState();
   const project = state.currentProject;
-  if (!project) return null;
 
   const handleMarkerMouseDown = useCallback((e, idx) => {
     if (state.mode === 'buildings') return;
@@ -29,6 +30,10 @@ export default function MarkerOverlay({ onMarkerClick, onMarkerDelete }) {
     const startClientY = start.y;
     const DRAG_THRESHOLD = 3;
     let isDragging = false;
+    // Tracked locally so the reducer's marker object is never mutated in place;
+    // the final position is committed once on pointer-up.
+    let nextX = marker.x;
+    let nextY = marker.y;
 
     const onMove = (ev) => {
       const p = getPoint(ev);
@@ -39,11 +44,9 @@ export default function MarkerOverlay({ onMarkerClick, onMarkerDelete }) {
       dispatch({ type: 'SET_DRAG_STATE', dragState: { isDragging: true, markerIdx: idx } });
 
       const rect = img.getBoundingClientRect();
-      const x = Math.max(0, Math.min(100, ((p.x - rect.left) / rect.width) * 100));
-      const y = Math.max(0, Math.min(100, ((p.y - rect.top) / rect.height) * 100));
-      marker.x = x;
-      marker.y = y;
-      if (markerEl) { markerEl.style.left = `${x}%`; markerEl.style.top = `${y}%`; }
+      nextX = Math.max(0, Math.min(100, ((p.x - rect.left) / rect.width) * 100));
+      nextY = Math.max(0, Math.min(100, ((p.y - rect.top) / rect.height) * 100));
+      if (markerEl) { markerEl.style.left = `${nextX}%`; markerEl.style.top = `${nextY}%`; }
     };
 
     const onUp = () => {
@@ -53,7 +56,7 @@ export default function MarkerOverlay({ onMarkerClick, onMarkerDelete }) {
       window.removeEventListener('touchend', onUp);
       window.removeEventListener('touchcancel', onUp);
       if (isDragging) {
-        dispatch({ type: 'MOVE_MARKER', idx, x: marker.x, y: marker.y });
+        dispatch({ type: 'MOVE_MARKER', idx, x: nextX, y: nextY });
         setTimeout(() => dispatch({ type: 'SET_DRAG_STATE', dragState: { isDragging: false, markerIdx: null } }), 50);
       }
     };
@@ -64,6 +67,8 @@ export default function MarkerOverlay({ onMarkerClick, onMarkerDelete }) {
     window.addEventListener('touchend', onUp);
     window.addEventListener('touchcancel', onUp);
   }, [state.mode, project, dispatch]);
+
+  if (!project) return null;
 
   return (
     <div className="marker-overlay" id="marker-overlay">

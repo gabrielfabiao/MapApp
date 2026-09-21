@@ -1,3 +1,5 @@
+'use client';
+
 import { useAppState } from '../../context/AppContext';
 
 const weatherCodes = {

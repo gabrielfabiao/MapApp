@@ -1,3 +1,5 @@
+'use client';
+
 import {
   DndContext,
   closestCenter,
@@ -12,9 +14,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useState } from 'react';
 import { useAppState } from '../../context/AppContext';
-import ConfirmModal from '../common/ConfirmModal';
 
 function SortableMarkerItem({ marker, idx, onEdit, onDelete, onHover, onHoverEnd }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: idx });
@@ -57,10 +57,9 @@ function SortableMarkerItem({ marker, idx, onEdit, onDelete, onHover, onHoverEnd
   );
 }
 
-export default function MarkerList({ onEdit }) {
+export default function MarkerList({ onEdit, onDelete }) {
   const { state, dispatch } = useAppState();
   const project = state.currentProject;
-  const [deleteIdx, setDeleteIdx] = useState(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -84,40 +83,23 @@ export default function MarkerList({ onEdit }) {
     if (el) el.classList.remove('highlighted');
   };
 
-  const handleConfirmDelete = () => {
-    dispatch({ type: 'DELETE_MARKER', idx: deleteIdx });
-    setDeleteIdx(null);
-  };
-
-  const deleteTargetMarker = deleteIdx !== null ? project.markers[deleteIdx] : null;
-
   return (
-    <>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={project.markers.map((_, i) => i)} strategy={verticalListSortingStrategy}>
-          <div className="sidebar" id="marker-legend-list">
-            {project.markers.map((marker, idx) => (
-              <SortableMarkerItem
-                key={idx}
-                idx={idx}
-                marker={marker}
-                onEdit={onEdit}
-                onDelete={setDeleteIdx}
-                onHover={handleHover}
-                onHoverEnd={handleHoverEnd}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
-
-      <ConfirmModal
-        isOpen={deleteIdx !== null}
-        title="Delete Marker"
-        message={`Are you sure you want to delete "${deleteTargetMarker?.title || deleteTargetMarker?.label || 'this marker'}"? This cannot be undone.`}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteIdx(null)}
-      />
-    </>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={project.markers.map((_, i) => i)} strategy={verticalListSortingStrategy}>
+        <div className="sidebar" id="marker-legend-list">
+          {project.markers.map((marker, idx) => (
+            <SortableMarkerItem
+              key={idx}
+              idx={idx}
+              marker={marker}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onHover={handleHover}
+              onHoverEnd={handleHoverEnd}
+            />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 }

@@ -1,5 +1,7 @@
+'use client';
+
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAppState } from '../../context/AppContext';
 import { buildCareEventsForYear } from '../../utils/careEvents';
 import Logo from '../common/Logo';
@@ -37,7 +39,7 @@ function isSameDay(a, b) {
 }
 
 export default function CalendarPage() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { state } = useAppState();
   const [viewDate, setViewDate] = useState(new Date());
   const today = new Date();
@@ -68,7 +70,7 @@ export default function CalendarPage() {
         </div>
 
         <header>
-          <button className="btn" onClick={() => navigate('/')} title="Back to Projects">
+          <button className="btn" onClick={() => router.push('/')} title="Back to Projects">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="m15 18-6-6 6-6"/>
             </svg>

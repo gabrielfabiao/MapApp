@@ -1,9 +1,11 @@
+'use client';
+
 import { useAppState } from '../../context/AppContext';
 import MarkerList from './MarkerList';
 import PlantList from './PlantList';
 import SunPanel from './SunPanel';
 
-export default function Sidebar({ onMarkerEdit }) {
+export default function Sidebar({ onMarkerEdit, onMarkerDelete }) {
   const { state, dispatch } = useAppState();
   const project = state.currentProject;
 
@@ -34,7 +36,7 @@ export default function Sidebar({ onMarkerEdit }) {
               <div className="sidebar-panel-heading" id="marker-count-label">
                 Markers ({project?.markers.length || 0})
               </div>
-              <MarkerList onEdit={onMarkerEdit} />
+              <MarkerList onEdit={onMarkerEdit} onDelete={onMarkerDelete} />
             </div>
           )}
 

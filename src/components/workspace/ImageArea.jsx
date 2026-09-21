@@ -1,3 +1,5 @@
+'use client';
+
 import { useRef, useEffect, useCallback } from 'react';
 import { useAppState } from '../../context/AppContext';
 import { getNextAutoLabel } from '../../utils/markerUtils';
@@ -248,10 +250,6 @@ export default function ImageArea({ onMarkerClick, onMarkerDelete }) {
             </div>
           )}
         </div>
-      </div>
-
-      <div id="sun-overlay-container" style={{ position: 'absolute', bottom: 20, left: 20, pointerEvents: 'none', zIndex: 101 }}>
-        {/* Sun compass rendered by SunOverlay component */}
       </div>
     </div>
   );

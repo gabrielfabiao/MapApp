@@ -1,35 +1,35 @@
-import { supabase } from './lib/supabaseClient';
+import { supabase } from './lib/supabase/browser';
+import { fromDbRow, toDbRow } from './lib/projectMapper';
 
-function fromDbRow(row) {
-    return {
-        id: row.id,
-        name: row.name,
-        image: row.image,
-        markerType: row.marker_type,
-        markers: row.markers || [],
-        buildings: row.buildings || [],
-        trees: [],
-        pixelsPerUnit: row.pixels_per_unit,
-        location: row.location,
-        northBearing: row.north_bearing,
-        updatedAt: new Date(row.updated_at).getTime(),
-    };
+const SAVE_DEBOUNCE_MS = 600;
+
+// Each save is a full-row upsert, so rapid edits (slider drags, marker drags)
+// only need the last payload to land. Pending writes are keyed by project id
+// and flushed when the tab is hidden so nothing is lost on navigation.
+const pendingSaves = new Map();
+
+function writeProject(project, userId) {
+    return supabase.from('projects').upsert(toDbRow(project, userId));
 }
 
-function toDbRow(project, userId) {
-    return {
-        id: project.id,
-        user_id: userId,
-        name: project.name,
-        image: project.image,
-        marker_type: project.markerType,
-        markers: project.markers,
-        buildings: project.buildings,
-        pixels_per_unit: project.pixelsPerUnit,
-        location: project.location,
-        north_bearing: project.northBearing,
-        updated_at: new Date(project.updatedAt).toISOString(),
-    };
+function flushProject(id) {
+    const pending = pendingSaves.get(id);
+    if (!pending) return Promise.resolve();
+    clearTimeout(pending.timer);
+    pendingSaves.delete(id);
+    return writeProject(pending.project, pending.userId).then(({ error }) => {
+        if (error) throw error;
+    });
+}
+
+export function flushPendingSaves() {
+    return Promise.all([...pendingSaves.keys()].map(flushProject));
+}
+
+if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') flushPendingSaves().catch(console.error);
+    });
 }
 
 export const Storage = {
@@ -42,22 +42,20 @@ export const Storage = {
         return data.map(fromDbRow);
     },
 
-    async getProject(id) {
-        const { data, error } = await supabase
-            .from('projects')
-            .select('*')
-            .eq('id', id)
-            .maybeSingle();
-        if (error) throw error;
-        return data ? fromDbRow(data) : null;
-    },
-
-    async saveProject(project, userId) {
-        const { error } = await supabase.from('projects').upsert(toDbRow(project, userId));
-        if (error) throw error;
+    saveProject(project, userId) {
+        const existing = pendingSaves.get(project.id);
+        if (existing) clearTimeout(existing.timer);
+        const timer = setTimeout(() => flushProject(project.id).catch(console.error), SAVE_DEBOUNCE_MS);
+        pendingSaves.set(project.id, { project, userId, timer });
+        return Promise.resolve();
     },
 
     async deleteProject(id) {
+        const pending = pendingSaves.get(id);
+        if (pending) {
+            clearTimeout(pending.timer);
+            pendingSaves.delete(id);
+        }
         const { error } = await supabase.from('projects').delete().eq('id', id);
         if (error) throw error;
     },

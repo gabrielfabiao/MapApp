@@ -1,7 +1,9 @@
+'use client';
+
 import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAppState } from '../../context/AppContext';
-import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase/browser';
 import { generateId } from '../../utils/markerUtils';
 import ProjectGrid from './ProjectGrid';
 import NewProjectModal from './NewProjectModal';
@@ -11,9 +13,14 @@ import HelpModal from '../common/HelpModal';
 import Logo from '../common/Logo';
 
 export default function Dashboard() {
-  const { state, dispatch } = useAppState();
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
+  const { state, dispatch, user } = useAppState();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  };
 
   const [showNewModal, setShowNewModal] = useState(false);
   const [renameTarget, setRenameTarget] = useState(null);
@@ -40,14 +47,14 @@ export default function Dashboard() {
     };
     dispatch({ type: 'ADD_PROJECT', project });
     dispatch({ type: 'SET_CURRENT_PROJECT', project });
-    navigate(`/workspace?id=${project.id}`);
+    router.push(`/workspace?id=${project.id}`);
   };
 
   const handleOpen = (id) => {
     const project = state.projects.find(p => p.id === id);
     if (project) {
       dispatch({ type: 'SET_CURRENT_PROJECT', project });
-      navigate(`/workspace?id=${id}`);
+      router.push(`/workspace?id=${id}`);
     }
   };
 
@@ -75,7 +82,7 @@ export default function Dashboard() {
           <Logo size={34} />
           <div className="app-account-row">
             <span className="app-account-email">{user?.email}</span>
-            <button className="btn" onClick={signOut}>Log Out</button>
+            <button className="btn" onClick={handleSignOut}>Log Out</button>
           </div>
         </div>
 
@@ -106,7 +113,7 @@ export default function Dashboard() {
             />
           </div>
           <div className="header-actions">
-            <button className="btn" onClick={() => navigate('/calendar')}>
+            <button className="btn" onClick={() => router.push('/calendar')}>
               <span>&#128197;</span> Calendar
             </button>
             <button className="btn btn-primary" onClick={() => setShowNewModal(true)}>

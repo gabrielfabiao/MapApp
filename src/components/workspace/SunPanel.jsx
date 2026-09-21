@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
-import SunCalc from 'suncalc';
+'use client';
+
+import { useState } from 'react';
 import { useAppState } from '../../context/AppContext';
+import { DEFAULT_LOCATION, getSunPosition } from '../../utils/sunPosition';
 
 function parseCoord(val) {
   return parseFloat(String(val).replace(',', '.'));
@@ -10,7 +12,7 @@ export default function SunPanel() {
   const { state, dispatch } = useAppState();
   const project = state.currentProject;
 
-  const loc = project?.location || { lat: 51.5, lng: -0.1 };
+  const loc = project?.location || DEFAULT_LOCATION;
   const sunDate = state.sunDate || new Date();
 
   const [lat, setLat] = useState(String(loc.lat));
@@ -21,11 +23,10 @@ export default function SunPanel() {
 
   const timeMinutes = sunDate.getHours() * 60 + sunDate.getMinutes();
 
-  // Sun stats
-  const pos = SunCalc.getPosition(sunDate, parseCoord(lat) || 0, parseCoord(lng) || 0);
-  const altDeg = pos.altitude * 180 / Math.PI;
-  const aziDeg = (pos.azimuth * 180 / Math.PI + 180) % 360;
-  const intensity = Math.max(0, Math.min(100, (pos.altitude / (Math.PI / 2)) * 100));
+  const { altDeg, aziDeg, intensity } = getSunPosition(
+    { lat: parseCoord(lat) || 0, lng: parseCoord(lng) || 0 },
+    sunDate
+  );
 
   const saveProject = (patch) => {
     dispatch({ type: 'UPDATE_CURRENT_PROJECT', patch });

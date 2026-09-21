@@ -1,12 +1,14 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAppState } from '../../context/AppContext';
 import Logo from '../common/Logo';
 
 export default function Toolbar({ onImageUpload, onOpenSettings }) {
   const { state, dispatch } = useAppState();
-  const navigate = useNavigate();
+  const router = useRouter();
   const fileInputRef = useRef(null);
   const project = state.currentProject;
   const [showShadowsPopover, setShowShadowsPopover] = useState(false);
@@ -87,7 +89,7 @@ export default function Toolbar({ onImageUpload, onOpenSettings }) {
       <Logo size={20} showWordmark={false} />
 
       {/* 1 — Back */}
-      <button className="btn" id="back-btn" title="Go Back" onClick={() => navigate('/')}>
+      <button className="btn" id="back-btn" title="Go Back" onClick={() => router.push('/')}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="m15 18-6-6 6-6"/>
         </svg>

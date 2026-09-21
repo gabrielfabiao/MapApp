@@ -1,5 +1,8 @@
-import { useCallback } from 'react';
+'use client';
+
+import { useCallback, useState } from 'react';
 import { useAppState } from '../../context/AppContext';
+import BuildingHeightModal from './BuildingHeightModal';
 
 // Extracts client coordinates from either a MouseEvent or a TouchEvent.
 const getPoint = (e) => {
@@ -11,9 +14,10 @@ const getPoint = (e) => {
 export default function BuildingsOverlay() {
   const { state, dispatch } = useAppState();
   const project = state.currentProject;
-  if (!project) return null;
-
   const isActive = state.mode === 'buildings';
+  // { mode: 'add', rect } while a freshly drawn rectangle awaits a height,
+  // or { mode: 'edit', idx } when adjusting an existing building.
+  const [heightPrompt, setHeightPrompt] = useState(null);
 
   const handleBuildingMouseDown = useCallback((e, idx, action) => {
     e.preventDefault();
@@ -115,10 +119,7 @@ export default function BuildingsOverlay() {
       if (width > 1 && height > 1) {
         const left = Math.min(drawState.startX, drawState.currentX);
         const top = Math.min(drawState.startY, drawState.currentY);
-        const h = prompt('Building height (m):', '10');
-        if (h !== null) {
-          dispatch({ type: 'ADD_BUILDING', building: { x: left, y: top, width, height, zHeight: parseFloat(h) || 10 } });
-        }
+        setHeightPrompt({ mode: 'add', rect: { x: left, y: top, width, height } });
       }
       dispatch({ type: 'SET_DRAWING_STATE', drawingState: null });
     };
@@ -133,75 +134,94 @@ export default function BuildingsOverlay() {
   const handleBuildingClick = useCallback((e, idx) => {
     if (!isActive || state.dragState.isDragging) return;
     e.stopPropagation();
-    const h = prompt('Set building height:', project.buildings[idx].zHeight);
-    if (h !== null) {
-      dispatch({ type: 'UPDATE_BUILDING', idx, patch: { zHeight: parseFloat(h) || project.buildings[idx].zHeight } });
+    setHeightPrompt({ mode: 'edit', idx });
+  }, [isActive, state.dragState.isDragging]);
+
+  const handleHeightConfirm = (zHeight) => {
+    if (heightPrompt.mode === 'add') {
+      dispatch({ type: 'ADD_BUILDING', building: { ...heightPrompt.rect, zHeight } });
+    } else {
+      dispatch({ type: 'UPDATE_BUILDING', idx: heightPrompt.idx, patch: { zHeight } });
     }
-  }, [isActive, state.dragState.isDragging, project, dispatch]);
+    setHeightPrompt(null);
+  };
+
+  if (!project) return null;
 
   const ds = state.drawingState;
+  const editingHeight = heightPrompt?.mode === 'edit' ? project.buildings[heightPrompt.idx]?.zHeight : 10;
 
   return (
-    <div
-      className="buildings-overlay"
-      id="buildings-overlay"
-      style={{ pointerEvents: isActive ? 'auto' : 'none', display: isActive ? 'block' : 'none' }}
-      onMouseDown={handleOverlayMouseDown}
-      onTouchStart={handleOverlayMouseDown}
-    >
-      {project.buildings.map((b, idx) => (
-        <div
-          key={idx}
-          className="building-block"
-          data-idx={idx}
-          style={{
-            left: `${b.x}%`, top: `${b.y}%`,
-            width: `${b.width}%`, height: `${b.height}%`,
-            transform: `rotate(${b.angle || 0}deg)`,
-          }}
-          onMouseDown={e => {
-            const action = e.target.closest('.rotate-handle') ? 'rotate'
-              : e.target.closest('.resize-handle') ? 'resize' : 'move';
-            if (!e.target.closest('.delete-building-btn')) handleBuildingMouseDown(e, idx, action);
-          }}
-          onTouchStart={e => {
-            const action = e.target.closest('.rotate-handle') ? 'rotate'
-              : e.target.closest('.resize-handle') ? 'resize' : 'move';
-            if (!e.target.closest('.delete-building-btn')) handleBuildingMouseDown(e, idx, action);
-          }}
-          onClick={e => handleBuildingClick(e, idx)}
-        >
-          <b>{b.zHeight !== undefined ? b.zHeight : 10}m</b>
-          {isActive && (
-            <>
-              <div
-                className="delete-building-btn"
-                data-idx={idx}
-                onClick={e => { e.stopPropagation(); dispatch({ type: 'DELETE_BUILDING', idx }); }}
-              >&times;</div>
-              <div className="resize-handle" data-idx={idx} />
-              <div className="rotate-handle" data-idx={idx} />
-            </>
-          )}
-        </div>
-      ))}
+    <>
+      <div
+        className="buildings-overlay"
+        id="buildings-overlay"
+        style={{ pointerEvents: isActive ? 'auto' : 'none', display: isActive ? 'block' : 'none' }}
+        onMouseDown={handleOverlayMouseDown}
+        onTouchStart={handleOverlayMouseDown}
+      >
+        {project.buildings.map((b, idx) => (
+          <div
+            key={idx}
+            className="building-block"
+            data-idx={idx}
+            style={{
+              left: `${b.x}%`, top: `${b.y}%`,
+              width: `${b.width}%`, height: `${b.height}%`,
+              transform: `rotate(${b.angle || 0}deg)`,
+            }}
+            onMouseDown={e => {
+              const action = e.target.closest('.rotate-handle') ? 'rotate'
+                : e.target.closest('.resize-handle') ? 'resize' : 'move';
+              if (!e.target.closest('.delete-building-btn')) handleBuildingMouseDown(e, idx, action);
+            }}
+            onTouchStart={e => {
+              const action = e.target.closest('.rotate-handle') ? 'rotate'
+                : e.target.closest('.resize-handle') ? 'resize' : 'move';
+              if (!e.target.closest('.delete-building-btn')) handleBuildingMouseDown(e, idx, action);
+            }}
+            onClick={e => handleBuildingClick(e, idx)}
+          >
+            <b>{b.zHeight !== undefined ? b.zHeight : 10}m</b>
+            {isActive && (
+              <>
+                <div
+                  className="delete-building-btn"
+                  data-idx={idx}
+                  onClick={e => { e.stopPropagation(); dispatch({ type: 'DELETE_BUILDING', idx }); }}
+                >&times;</div>
+                <div className="resize-handle" data-idx={idx} />
+                <div className="rotate-handle" data-idx={idx} />
+              </>
+            )}
+          </div>
+        ))}
 
-      {ds?.active && (
-        <div
-          id="drawing-preview"
-          style={{
-            display: 'block',
-            position: 'absolute',
-            border: '2px dashed #0ea5e9',
-            background: 'rgba(14, 165, 233, 0.2)',
-            zIndex: 50,
-            left: `${Math.min(ds.startX, ds.currentX)}%`,
-            top: `${Math.min(ds.startY, ds.currentY)}%`,
-            width: `${Math.abs(ds.currentX - ds.startX)}%`,
-            height: `${Math.abs(ds.currentY - ds.startY)}%`,
-          }}
-        />
-      )}
-    </div>
+        {ds?.active && (
+          <div
+            id="drawing-preview"
+            style={{
+              display: 'block',
+              position: 'absolute',
+              border: '2px dashed #0ea5e9',
+              background: 'rgba(14, 165, 233, 0.2)',
+              zIndex: 50,
+              left: `${Math.min(ds.startX, ds.currentX)}%`,
+              top: `${Math.min(ds.startY, ds.currentY)}%`,
+              width: `${Math.abs(ds.currentX - ds.startX)}%`,
+              height: `${Math.abs(ds.currentY - ds.startY)}%`,
+            }}
+          />
+        )}
+      </div>
+
+      <BuildingHeightModal
+        isOpen={heightPrompt !== null}
+        title={heightPrompt?.mode === 'edit' ? 'Building Height' : 'New Building'}
+        initialHeight={editingHeight}
+        onConfirm={handleHeightConfirm}
+        onCancel={() => setHeightPrompt(null)}
+      />
+    </>
   );
 }
