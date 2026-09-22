@@ -1,4 +1,32 @@
 /**
+ * Pl@ntNet only accepts jpeg and png uploads, and infers the type from the
+ * uploaded filename. Returns the blob to send plus the matching extension,
+ * re-encoding to jpeg when the source is some other format (webp, gif, ...)
+ * or when the type is unknown.
+ */
+async function toSupportedImage(blob) {
+    if (blob.type === 'image/jpeg') return { blob, extension: 'jpg' };
+    if (blob.type === 'image/png') return { blob, extension: 'png' };
+
+    const bitmap = await createImageBitmap(blob);
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    canvas.getContext('2d').drawImage(bitmap, 0, 0);
+    bitmap.close();
+
+    const jpeg = await new Promise((resolve, reject) => {
+        canvas.toBlob(
+            (b) => (b ? resolve(b) : reject(new Error('Could not convert image to JPEG.'))),
+            'image/jpeg',
+            0.92
+        );
+    });
+
+    return { blob: jpeg, extension: 'jpg' };
+}
+
+/**
  * Service for interacting with the Pl@ntNet API.
  */
 export const PlantIdService = {
@@ -15,19 +43,26 @@ export const PlantIdService = {
         
         console.log("PlantIdService: Starting identification with images count:", imageBase64Array.length);
 
-        for (let i = 0; i < Math.min(imageBase64Array.length, 5); i++) {
+        const count = Math.min(imageBase64Array.length, 5);
+
+        for (let i = 0; i < count; i++) {
             const imgSrc = imageBase64Array[i];
             console.log(`PlantIdService: Preparing image ${i+1}. Is Data URI? ${imgSrc.startsWith('data:')}`);
             try {
                 const blob = await fetch(imgSrc).then(r => r.blob());
-                formData.append('images', blob);
+
+                // Pl@ntNet decides the file type from the part's filename, so a
+                // bare Blob (sent as filename="blob") is rejected with
+                // "Unsupported file type for image[n] (jpeg or png)". It only
+                // accepts jpeg and png, so anything else is converted first.
+                const { blob: uploadBlob, extension } = await toSupportedImage(blob);
+                formData.append('images', uploadBlob, `image${i}.${extension}`);
+                formData.append('organs', 'auto');
             } catch (err) {
                 console.error(`PlantIdService: CORS or fetch error on image source: ${imgSrc.substring(0, 50)}...`, err);
                 throw new Error(`Failed to load image ${i+1} for identification. If it's a remote URL, there may be a CORS issue with the image host. Error: ${err.message}`);
             }
         }
-        
-        formData.append('organs', 'auto');
 
         const apiUrl = `/api/plantnet/v2/identify/all?api-key=${apiKey}`;
         console.log("PlantIdService: Making request to proxy URL:", apiUrl);
@@ -41,8 +76,17 @@ export const PlantIdService = {
             console.log("PlantIdService: Proxy response received with status:", response.status);
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.error("PlantIdService: API returned error:", errorData);
+                // The proxy can fail before reaching Pl@ntNet, in which case the
+                // body is an HTML error page rather than JSON - read it as text
+                // first so the real reason isn't swallowed into an empty object.
+                const raw = await response.text().catch(() => '');
+                let errorData = {};
+                try {
+                    errorData = raw ? JSON.parse(raw) : {};
+                } catch {
+                    errorData = { message: raw.slice(0, 300) };
+                }
+                console.error("PlantIdService: API returned error:", response.status, errorData);
                 
                 // If the Pl@ntNet API simply cannot find a matching plant, it returns 404
                 if (response.status === 404 && (errorData.message === "Species not found" || errorData.error === "not found")) {

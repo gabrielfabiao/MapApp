@@ -434,12 +434,6 @@ textarea:focus-visible {
   margin: 0 0.5rem;
 }
 
-.workspace-toolbar .btn.active {
-  background: var(--amazon-primary);
-  border-color: var(--amazon-primary);
-  color: #fff;
-}
-
 .toolbar-group {
   position: relative;
   display: inline-flex;
@@ -455,8 +449,8 @@ textarea:focus-visible {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 9999px;
-  padding: 0.5rem 0.75rem;
+  border-radius: 1.1rem;
+  padding: 0.5rem;
   box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2);
   white-space: nowrap;
   z-index: 2000;
@@ -589,55 +583,59 @@ textarea:focus-visible {
   flex-shrink: 0;
 }
 
-.workspace-toolbar .btn {
+/* Icon-on-top + caption-below toolbar buttons (see ToolbarButton.jsx). A
+   labeled item nested inside the pill-shaped toolbar/popover, rather than a
+   fixed-size circle, so a visible caption always fits. */
+.toolbar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.3rem 0.5rem;
   background: rgba(255,255,255,0.1);
   color: #fff;
   border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 9999px;
-  padding: 0.55rem 1.1rem;
+  border-radius: 0.9rem;
   font-size: 0.85rem;
   font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
   transition: background 0.2s;
 }
 
-.workspace-toolbar .btn:hover {
+.toolbar-btn:hover {
   background: rgba(255,255,255,0.2);
 }
 
-.workspace-toolbar .btn-icon {
-  padding: 0;
-  width: 2.2rem;
-  height: 2.2rem;
-  display: inline-flex;
+.toolbar-btn.active {
+  background: var(--amazon-primary);
+  border-color: var(--amazon-primary);
+  color: #fff;
+}
+
+.toolbar-btn-icon {
+  display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  height: 1.05rem;
+  line-height: 1;
 }
 
-.workspace-toolbar .btn-primary {
-  background: var(--amazon-primary);
-  border-color: transparent;
-  padding: 0.55rem 1.25rem;
+.toolbar-btn-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  line-height: 1;
+  white-space: nowrap;
 }
 
-.workspace-toolbar .btn-primary:hover {
-  background: var(--amazon-dark);
-}
-
-.workspace-toolbar .search-input {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: #fff;
-  border-radius: 9999px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  padding: 0.55rem 1.1rem;
-  cursor: pointer;
-}
-
-.workspace-toolbar .search-input option {
-  background: #1e293b;
-  color: #fff;
+.toolbar-btn.active .toolbar-btn-label {
+  opacity: 0.95;
 }
 
 /* Collapsible right panel */
@@ -1298,31 +1296,6 @@ textarea:focus-visible {
   cursor: wait;
 }
 
-#settings-btn,
-#weather-toggle-btn,
-#sidebar-toggle-btn,
-#back-btn {
-  width: 40px;
-  height: 40px;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-#settings-btn {
-  font-size: 1.2rem;
-  border: 1px solid transparent;
-}
-
-#settings-btn:hover {
-  transform: rotate(45deg);
-  background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
 .modal-overlay#settings-modal .modal {
   max-width: 400px;
 }
@@ -1785,6 +1758,10 @@ textarea:focus-visible {
     overflow-x: auto;
     /* hide scrollbar but keep scrollable */
     scrollbar-width: none;
+    /* Fade both edges so a scrollable row with more buttons off-screen
+       reads as scrollable, not as "that's everything". */
+    mask-image: linear-gradient(to right, transparent 0, black 1.25rem, black calc(100% - 1.25rem), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0, black 1.25rem, black calc(100% - 1.25rem), transparent 100%);
   }
 
   .workspace-toolbar::-webkit-scrollbar {
@@ -1806,14 +1783,8 @@ textarea:focus-visible {
     white-space: nowrap;
   }
 
-  .workspace-toolbar .btn-icon {
-    width: 2.75rem;
-    height: 2.75rem;
-    flex-shrink: 0;
-  }
-
-  .workspace-toolbar .btn {
-    flex-shrink: 0;
+  .toolbar-btn-label {
+    font-size: 0.56rem;
   }
 
   /* Sun compass smaller + move up from toolbar */
@@ -1948,11 +1919,6 @@ textarea:focus-visible {
 @media (pointer: coarse) {
   .btn {
     min-height: 44px;
-  }
-
-  .workspace-toolbar .btn-icon {
-    width: 2.75rem;
-    height: 2.75rem;
   }
 
   .card-action-btn {
