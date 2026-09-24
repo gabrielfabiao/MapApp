@@ -1,4 +1,5 @@
 import '../style.css';
+import TestNoticeBanner from '../components/common/TestNoticeBanner';
 
 export const metadata = {
   title: 'BlooMap',
@@ -11,6 +12,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className="preload" suppressHydrationWarning>
         {children}
+        <TestNoticeBanner />
         <script
           dangerouslySetInnerHTML={{
             __html: `window.addEventListener('load', function () { document.body.classList.remove('preload'); });`,

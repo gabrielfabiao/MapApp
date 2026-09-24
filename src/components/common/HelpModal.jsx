@@ -44,23 +44,38 @@ const slides = [
   },
 ];
 
-export default function HelpModal() {
+/**
+ * @param {boolean} [requestOpen] - flip to true to open the tutorial from the
+ *   outside (the intro splash does this for first-time visitors).
+ * @param {() => void} [onDismiss] - called whenever the tutorial is closed.
+ */
+export default function HelpModal({ requestOpen = false, onDismiss }) {
   const [isOpen, setIsOpen] = useState(false);
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
+    if (requestOpen) {
+      setCurrent(0);
+      setIsOpen(true);
+    }
+  }, [requestOpen]);
+
+  useEffect(() => {
     const handleKey = (e) => {
       if (!isOpen) return;
-      if (e.key === 'Escape') setIsOpen(false);
+      if (e.key === 'Escape') { setIsOpen(false); onDismiss?.(); }
       if (e.key === 'ArrowRight') setCurrent(c => Math.min(c + 1, slides.length - 1));
       if (e.key === 'ArrowLeft') setCurrent(c => Math.max(c - 1, 0));
     };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [isOpen]);
+  }, [isOpen, onDismiss]);
 
   const open = () => { setCurrent(0); setIsOpen(true); };
-  const close = () => setIsOpen(false);
+  const close = () => {
+    setIsOpen(false);
+    onDismiss?.();
+  };
 
   const handleNext = () => {
     if (current === slides.length - 1) close();

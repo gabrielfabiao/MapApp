@@ -1,32 +1,35 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppState } from '../../context/AppContext';
-import { supabase } from '../../lib/supabase/browser';
 import { generateId } from '../../utils/markerUtils';
 import ProjectGrid from './ProjectGrid';
 import NewProjectModal from './NewProjectModal';
 import RenameProjectModal from './RenameProjectModal';
 import ConfirmModal from '../common/ConfirmModal';
 import HelpModal from '../common/HelpModal';
+import SplashScreen from '../common/SplashScreen';
 import Logo from '../common/Logo';
 
 export default function Dashboard() {
-  const { state, dispatch, user } = useAppState();
+  const { state, dispatch } = useAppState();
   const router = useRouter();
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
-    router.refresh();
-  };
 
   const [showNewModal, setShowNewModal] = useState(false);
   const [renameTarget, setRenameTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const mobileSearchInputRef = useRef(null);
+
+  const handleIntroFinish = useCallback(() => {
+    setShowTutorial(true);
+  }, []);
+
+  const handleTutorialDismiss = useCallback(() => {
+    setShowTutorial(false);
+  }, []);
 
   const filtered = state.projects.filter(p =>
     p.name.toLowerCase().includes(state.searchQuery.toLowerCase())
@@ -77,13 +80,11 @@ export default function Dashboard() {
 
   return (
     <div id="app">
+      <SplashScreen onFinish={handleIntroFinish} />
+
       <div id="dashboard-view" className="view">
         <div className="app-brand-row">
           <Logo size={34} />
-          <div className="app-account-row">
-            <span className="app-account-email">{user?.email}</span>
-            <button className="btn" onClick={handleSignOut}>Log Out</button>
-          </div>
         </div>
 
         <header>
@@ -151,7 +152,7 @@ export default function Dashboard() {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <HelpModal />
+      <HelpModal requestOpen={showTutorial} onDismiss={handleTutorialDismiss} />
     </div>
   );
 }

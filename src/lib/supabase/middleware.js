@@ -4,13 +4,9 @@ import { NextResponse } from 'next/server';
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Reachable without a session cookie: /reset-password's recovery token lives
-// in the URL hash, which the browser never sends to the server, so the
-// middleware can't see it's "authenticated" on that first request.
-const PUBLIC_PATHS = ['/login', '/reset-password'];
-// Only /login should bounce an already-authenticated visitor away.
-const REDIRECT_IF_AUTHENTICATED = ['/login'];
-
+// No login: every visitor gets a silent anonymous Supabase session on their
+// first request, so RLS (still scoped to auth.uid()) keeps every visitor's
+// data private without ever showing a signup/login form.
 export async function updateSession(request) {
   let response = NextResponse.next({ request });
 
@@ -33,17 +29,8 @@ export async function updateSession(request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
-  const isPublicPath = PUBLIC_PATHS.includes(pathname);
-
-  if (!user && !isPublicPath) {
-    const redirectUrl = new URL('/login', request.url);
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  if (user && REDIRECT_IF_AUTHENTICATED.includes(pathname)) {
-    const redirectUrl = new URL('/', request.url);
-    return NextResponse.redirect(redirectUrl);
+  if (!user) {
+    await supabase.auth.signInAnonymously();
   }
 
   return response;

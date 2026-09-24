@@ -16,6 +16,24 @@ export default function SettingsModal({ isOpen, onClose }) {
     onClose();
   };
 
+  const markers = state.currentProject?.markers || [];
+
+  const handleExportList = () => {
+    const lines = markers.map((m, i) => {
+      const name = m.title?.trim() || m.scientificName?.trim() || 'Unnamed';
+      return `${m.label || i + 1}- ${name}`;
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(state.currentProject?.name || 'markers').trim().replace(/[^\w-]+/g, '_')}-marker-list.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -34,6 +52,16 @@ export default function SettingsModal({ isOpen, onClose }) {
             value={apiKey}
             onChange={e => setApiKey(e.target.value)}
           />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Marker List</label>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+            Download a plain-text list of every marker in this project, numbered/lettered and named (e.g. "1- Olive tree").
+          </p>
+          <button className="btn" onClick={handleExportList} disabled={markers.length === 0}>
+            Export Marker List
+          </button>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
